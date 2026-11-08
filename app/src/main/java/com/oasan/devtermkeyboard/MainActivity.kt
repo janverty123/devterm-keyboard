@@ -46,7 +46,7 @@ class MainActivity : Activity() {
                 setTextColor(textColor)
                 textSize = 15f
                 typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-                background = GradientDrawable().apply {
+                this.background = GradientDrawable().apply {
                     cornerRadius = dp(12).toFloat()
                     setColor(Color.rgb(37, 134, 124))
                 }

@@ -33,7 +33,7 @@ class DeveloperKeyboardService : InputMethodService() {
     override fun onCreateInputView(): View {
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(background)
+            setBackgroundColor(this@DeveloperKeyboardService.background)
             setPadding(dp(3), dp(5), dp(3), dp(7))
         }
         render()
@@ -131,7 +131,7 @@ class DeveloperKeyboardService : InputMethodService() {
                 else -> 15f
             }
             typeface = Typeface.create(Typeface.MONOSPACE, Typeface.BOLD)
-            setTextColor(foreground)
+            setTextColor(this@DeveloperKeyboardService.foreground)
             isSoundEffectsEnabled = false
             minHeight = 0
             minimumHeight = 0
