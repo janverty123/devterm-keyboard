@@ -128,7 +128,7 @@ class MainActivity : Activity() {
                 text = title
                 setAllCaps(false)
                 textSize = 13f
-                setTextColor(if (selected) accentInk else foreground)
+                setTextColor(if (selected) accentInk else this@MainActivity.foreground)
                 background = shape(if (selected) accent else elevated, 12)
                 setOnClickListener {
                     KeyboardPreferences.setTheme(this@MainActivity, id)
