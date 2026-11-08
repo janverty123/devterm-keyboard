@@ -1,22 +1,21 @@
-# Keylix v0.4.0 — Dual-mode keyboard preview
+# Keylix v0.5.0 — Tools menu & emoji scrolling overhaul
 
-## New
-- The app is renamed **Keylix**, with a minimal native keyboard/terminal icon.
-- Standard/Dev switching from Settings **and** the keyboard header; user preference persisted.
-- Rightmost Enter, full-text Shift key, familiar Gboard-like Space and emoji placement.
-- Functional categorized Unicode emoji picker, with six categories and a return-to-letters control.
-- Lightweight offline English word suggestions and conservative autocorrect in Standard mode. Both can be switched off.
-- Voice via Android's speech-recognition activity, with a fallback recognizer when available, rather than relying on a speech recognizer hidden in the keyboard service.
-- Seven appearance themes and accent-color key flashes (no spreading ripple).
-- Cleaner settings with setup status and a text field for keyboard testing.
-- Expanded source organization, documentation and unit tests.
+This developer preview refines Keylix's keyboard interface using familiar Gboard-style toolbar/menu patterns. The keyboard and icons are independently implemented; no proprietary Gboard graphics or code are included.
 
-## Install on Android
-In the release **Assets**, tap **Keylix-v0.4.0.apk**, not Source code ZIP. Install it, open Keylix, enable it as a system keyboard and select it. Tap the **Aa Standard** / **>_ Dev** chip in the keyboard header to switch modes.
+### Changes
+- A compact main toolbar with vector **Tools**, **Clipboard**, **Emoji**, and **Mic** icons; settings moved into the expanded tools panel.
+- A **3×3 tools grid** with Mode, Emoji, Paste, Text editing, Themes, Settings, Switch input, Voice, and Symbols.
+- No emoji glyph placeholders for control buttons; Android VectorDrawables for menu icons, emoji toggle, microphone, category tabs, Backspace and Enter.
+- Emoji scrolling constrained to a dedicated clipped viewport. Category row and ABC/Space/Delete/Enter row remain fixed.
+- Ten categorized emoji groups with Recent, Activities, Objects, Flags and an expanded set of Unicode emoji.
+- Dev mode retains its terminal shortcuts, separate from the main Gboard-inspired controls.
+- Original solid accent key-press animation retained.
 
-## Notes
-This is a debug-signed prerelease. Installing over a differently signed older version may fail; uninstall/reinstall if needed, and reenable the keyboard. The existing package ID is unchanged.
+### Install
+Open Assets and tap **Keylix-v0.5.0.apk**. The source-code ZIP is not the Android installer. This is a debug-signed prerelease. Signature mismatches with older APKs may require uninstall/reinstall and re-enabling the keyboard.
 
-Keylix itself has no internet permission or typing history. Optional speech recognition uses other installed providers that may process voice online. **Voice and pasted text are inserted without automatically pressing Enter.**
+### Emoji styling
+Actual emoji are rendered by your Android device's color emoji font (commonly Noto Color Emoji). This preserves Unicode sequences such as flags, professions and skin tones; no Gboard-owned emoji asset bundle is redistributed.
 
-Predictions and autocorrect are intentionally lightweight; this is not a copy of Gboard's proprietary engine. Actual Termux paste and speech behavior, including OEM-specific Android 16 edge-to-edge controls, should be tested on a device.
+### Testing status
+The APK CI build and unit tests verify compilation, not physical device behavior. Check scroll clipping on Android 16, changing emoji categories, and keyboard bars in Termux.

@@ -237,6 +237,9 @@ class MainActivity : Activity() {
             insets
         }
         setContentView(scroll)
+        if (intent.getStringExtra("open_section") == "themes") {
+            scroll.post { scroll.smoothScrollTo(0, themeCard.top) }
+        }
     }
 
     override fun onResume() {

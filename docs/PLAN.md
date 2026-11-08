@@ -28,3 +28,15 @@
 
 ## Known differences from Gboard
 Gboard uses proprietary language models, neural predictions, multilanguage vocabularies, gesture typing and internal Google services; Keylix implements only basic suggestions and autocorrection and invokes public Android speech-recognition interfaces. No claim of full feature equivalence.
+
+## v0.5 menu and emoji overhaul
+- [x] Study Gboard's compact toolbar and expanded tool grid
+- [x] Replace menu control emoji/glyph icons with standalone Android vector artwork
+- [x] Move Settings and Mode selection to a full tools menu
+- [x] Keep developer shortcuts in their own strip under the general toolbar
+- [x] Rebuild emoji scroller with clipped viewport and pinned category/footer rows
+- [x] Add Recent, Activities, Objects and Flags emoji categories
+- [x] Continue rendering real emoji via Android system color emoji font
+- [ ] Validate on Android 16 hardware with gesture nav and high-velocity scrolls
+- [ ] Add emoji search and editable/favorite shortcut tiles
+- [ ] Accessibility testing and stable release signing

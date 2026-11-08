@@ -40,3 +40,15 @@
 ## Privacy
 - [ ] Confirm AndroidManifest has no INTERNET permission.
 - [ ] No persistent typing history, clipboard history or saved dictation.
+
+## v0.5 tools and emoji regressions
+- [ ] Tap the top-left 4-square vector icon. The tools grid replaces typing rows without covering the app content with floating keys.
+- [ ] Every tool tile performs its named action: Mode, Emoji, Paste, Editing, Themes, Settings, Switch, Voice, Symbols.
+- [ ] Tap back arrow on tools header; normal keyboard returns.
+- [ ] No upper toolbar settings gear or emoji glyph substitutes for controls.
+- [ ] Tool icons, mic, emoji, Enter, and Backspace render as vectors and remain tappable at large system font scaling.
+- [ ] Open emoji picker and scroll quickly past many rows. The emojis NEVER draw over the category bar or the pinned bottom ABC/Delete/Enter keys.
+- [ ] Swipe category icons horizontally; categories stay stationary vertically.
+- [ ] Confirm Recents records tapped emojis in the same session, and Flags contains national flags.
+- [ ] Try narrow portrait and landscape widths. Emoji grid remains inside its bounds.
+- [ ] Switch to Dev mode and check the independent terminal toolbar can scroll sideways without covering the emoji panel.

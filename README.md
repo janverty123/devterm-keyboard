@@ -1,40 +1,40 @@
-# Keylix — Dual-mode Android keyboard
+# Keylix — an Android keyboard for everyday typing and developers
 
-**Everyday typing. Developer power.**
+Keylix is a native Kotlin Android system keyboard with a **Standard** mode for everyday writing and a **Dev** mode for Termux, SSH, command-line tools, and code editing. It is not Gboard and does not use Gboard's proprietary source or assets.
 
-Keylix is a native Kotlin system keyboard for Android. It combines a **Standard** phone layout with a **Dev** terminal layout, without root, network access, ad tracking or typing history. Formerly Termora / DevTerm Keyboard. The package ID remains `com.oasan.devtermkeyboard` to preserve Android upgrade compatibility.
+## v0.5 — Gboard-inspired tools menu and emoji picker
+
+The keyboard uses familiar mobile-keyboard interaction patterns drawn from Gboard's toolbar and tools grid, while all control icons and the app logo are original Android VectorDrawable graphics. No button uses an emoji character as a substitute for an icon.
+
+- **Tools menu:** The leftmost four-squares icon opens a nine-tile tools panel (Mode, Emoji, Paste, Editing, Themes, Settings, Keyboard switch, Voice, Symbols), replacing the keyboard rows instead of floating over them. A back arrow returns to the keys.
+- **Simplified upper toolbar:** Tools button, word suggestions or compact shortcuts, clipboard, emoji button, and vector microphone. There is no always-visible Settings gear; settings and themes live in the tools panel.
+- **Developer keys:** Dev mode retains its scrollable Esc, Tab, Ctrl, Alt, Shift, Paste, Copy, Nav, F-keys, arrows and Meta strip below the main toolbar.
+- **Real vector controls:** Microphone, clipboard, emoji picker, tools menu, settings, backspace, Enter and the emoji-category tabs use SVG-style Android VectorDrawable paths. Emoji *content* itself remains Unicode and uses the phone's system color emoji font, avoiding broken skin-tone and ZWJ sequences.
+- **Emoji picker:** Ten categories including recent emojis, smileys, people, animals, food, activities, travel, objects, symbols and flags. Category icons stay pinned on top; the emoji grid scrolls only inside a fixed clipped viewport, and ABC/Space/Delete/Enter remain pinned below. The data set is larger than v0.4.
+- **Original accents:** Keys retain a subtle solid-color press flash without a spreading ripple.
 
 ## Install
 
-Download **[Keylix v0.4.0 APK](https://github.com/janverty123/devterm-keyboard/releases/tag/v0.4.0)** from the release's **Assets** section, then install the `Keylix-v0.4.0.apk` file on Android. No ZIP extraction is needed. These are GitHub Actions **debug-signed prereleases**. Signature mismatches may require uninstalling an earlier debug APK first (which resets app preferences).
+Download **[Keylix v0.5.0 APK from GitHub Releases](https://github.com/janverty123/devterm-keyboard/releases/tag/v0.5.0)**. Under Assets, install `Keylix-v0.5.0.apk` directly on Android, not the source ZIP. This is a debug-signed prerelease: if an older debug APK has a different signing key, Android may require uninstalling it first.
 
-## What's new in v0.4
+## Enable and use
 
-- **Two modes:** Standard is a four-row messaging keyboard; Dev adds a number row, scrollable terminal controls, Nav and F1–F12 pages. Switch from the key strip or the app's Settings.
-- **Correct bottom row:** Enter is the rightmost key, with ?123, emoji, comma, Space and period in familiar positions. Shift uses the text **Shift**.
-- **Voice:** Dedicated microphone at the top right, outside the developer shortcut strip. Opens Android's available speech-recognition UI (Google if installed), with an on-device/standard recognizer fallback when available.
-- **English suggestions:** On-device prefix suggestions plus conservative spelling corrections using a modest built-in word list. Standard mode only. Disable independently under Text correction. Not equivalent to the full proprietary Gboard prediction model.
-- **Emoji picker:** Six categorized panels of Unicode emoji rendered with Android's color emoji font. System fonts support flags, skin tones and combined emoji better than one SVG per emoji.
-- **Solid key flash:** Removes spreading ripples in favor of a quick solid-color flash on press/release.
-- **Themes:** System, Cloud, Charcoal, Midnight, Mint, Slate and Rose. Compact height, haptics and character-preview toggles.
-- **New brand:** Clean keyboard/terminal logo and a simplified light settings screen.
+1. Install and open Keylix.
+2. Enable the keyboard in Android system settings, then select it as your active keyboard.
+3. Tap the **grid/tools** icon on the keyboard toolbar for Modes, Themes, Editing and other tools.
+4. Tap the vector **emoji** button for the emoji picker; scroll the grid, not the category toolbar.
+5. Tap the vector microphone for Android's installed speech-recognition provider when available.
 
-## Privacy and safety
+## Privacy and reliability
 
-- No `INTERNET` permission, keylogging, clipboard history, or background uploading.
-- Optional `RECORD_AUDIO` permission is used *only* if the fallback speech recognizer needs it.
-- External Google or other speech-recognition services may transmit voice recordings over the network according to the provider's policies.
-- Predictive suggestions are **off** in Dev mode, password fields, URLs, email inputs and editors marking input as `TYPE_NULL`.
-- The keyboard **does not press Enter after voice dictation or clipboard paste**, preventing unintended shell command execution.
+Keylix has no INTERNET permission, analytics or background typing logs. The optional speech provider may process voice on its own servers; normal typing does not require microphone permission. The clipboard Paste action inserts text without automatically pressing Enter, which is important inside Termux. The basic offline English prediction/autocorrect is optional in Standard mode only; it is not a copy of Gboard's proprietary prediction system.
 
-## Build
+### Emoji rendering / Google's emoji
 
-Open in Android Studio (JDK 17, Android SDK 35), or run `gradle testDebugUnitTest assembleDebug`. Successful pushes to `main` trigger GitHub Actions and a direct APK GitHub prerelease if the version is new. Version metadata lives in `app/build.gradle.kts`.
+Android provides a system color emoji font, commonly Google's **Noto Color Emoji**, so emoji characters can render in the system's native color style without shipping hundreds of manually copied images. The Noto Emoji project is open source under published licenses; this build uses the system font rather than bundling its assets. See [Google's Noto Emoji repository](https://github.com/googlefonts/noto-emoji) for license details.
 
-## Developer layout
-The top strip has Esc, Tab, Ctrl, Alt, Shift, Paste, Copy, Nav, Fn, arrow keys and Meta. The bottom row always ends with Enter. Long-press Space to change Android keyboards; double tap/hold Shift for Caps Lock.
+## Development
 
-## Known limitations and future work
-The basic offline correction engine is not trained on large language models, has a limited English vocabulary, and does not yet offer multilingual predictions, advanced grammar correction, gesture typing, personalized phrase learning, clipboard history, or automatic emoji search. Feature correctness varies by target app, speech provider, OEM keyboard safe areas, and Android version; **device testing is still required**.
+Kotlin, Android `InputMethodService`, Android SDK 35, JDK 17, Gradle 8.11.1. Run `gradle --no-daemon testDebugUnitTest assembleDebug` or use the provided GitHub Actions workflow. App package ID remains `com.oasan.devtermkeyboard` for upgrade continuity. Sources under `app/src/main/java/com/oasan/devtermkeyboard`.
 
-See [testing](docs/TESTING.md) and [roadmap](docs/PLAN.md).
+Physical testing is still necessary on Android 16 gesture navigation, landscape, Termux, emoji grid scrolling and voice recognition. See [docs/TESTING.md](docs/TESTING.md) and [docs/PLAN.md](docs/PLAN.md).

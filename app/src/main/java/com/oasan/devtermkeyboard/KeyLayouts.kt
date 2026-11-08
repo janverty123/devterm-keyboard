@@ -35,7 +35,7 @@ internal object KeyLayouts {
     private fun footer(symbols: Boolean = false): List<KeySpec> = listOf(
         l(if (symbols) "ABC" else "?123",
             if (symbols) KeyboardLayer.LETTERS else KeyboardLayer.SYMBOLS),
-        KeySpec("☺", KeyAction.Layer(KeyboardLayer.EMOJI), 1.05f, "Emojis"),
+        KeySpec("Emoji", KeyAction.Layer(KeyboardLayer.EMOJI), 1.05f, "Emojis"),
         t(",", ",", 0.85f),
         t("English", " ", 4.3f),
         t(".", ".", 0.85f),
@@ -65,7 +65,7 @@ internal object KeyLayouts {
                 listOf(
                     l("ABC", KeyboardLayer.LETTERS),
                     KeySpec("Shift", KeyAction.Shift, 1.6f),
-                    KeySpec("☺", KeyAction.Layer(KeyboardLayer.EMOJI), 1.0f),
+                    KeySpec("Emoji", KeyAction.Layer(KeyboardLayer.EMOJI), 1.0f),
                     t("space", " ", 4.0f),
                     k("⌫", KeyEvent.KEYCODE_DEL, 1.4f),
                     k("↵", KeyEvent.KEYCODE_ENTER, 1.5f)

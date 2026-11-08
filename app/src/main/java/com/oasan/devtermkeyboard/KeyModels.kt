@@ -19,6 +19,7 @@ sealed class KeyAction {
     object Voice : KeyAction()
     object ModeToggle : KeyAction()
     object Settings : KeyAction()
+    object Tools : KeyAction()
 }
 
 data class KeySpec(
