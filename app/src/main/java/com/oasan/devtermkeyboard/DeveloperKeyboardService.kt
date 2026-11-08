@@ -61,7 +61,7 @@ class DeveloperKeyboardService : InputMethodService() {
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(palette.background)
-            setPadding(dp(3), dp(3), dp(3), dp(36))
+            setPadding(dp(3), dp(3), dp(3), dp(46))
             clipChildren = false
             clipToPadding = false
         }
@@ -75,7 +75,7 @@ class DeveloperKeyboardService : InputMethodService() {
                 @Suppress("DEPRECATION")
                 insets.systemWindowInsetBottom
             }
-            val bottom = max(dp(36), navigation + dp(7))
+            val bottom = max(dp(46), navigation + dp(8))
             if (bottom != safeBottomPx) {
                 safeBottomPx = bottom
                 v.setPadding(dp(3), dp(3), dp(3), bottom)
@@ -155,7 +155,7 @@ class DeveloperKeyboardService : InputMethodService() {
         val config = resources.configuration
         val screen = config.screenHeightDp.takeIf { it > 0 } ?: 700
         val fraction = if (config.orientation == Configuration.ORIENTATION_LANDSCAPE) 0.55f else 0.40f
-        val calculated = ((screen * fraction - 98f) / 5f).toInt().coerceIn(28, 46)
+        val calculated = ((screen * fraction - 108f) / 5f).toInt().coerceIn(28, 46)
         return if (KeyboardPreferences.isCompact(this)) (calculated - 6).coerceAtLeast(25) else calculated
     }
 
@@ -204,6 +204,10 @@ class DeveloperKeyboardService : InputMethodService() {
             panel.addView(row, LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, dp(height + 4)
             ))
+            if (ValueAnimator.areAnimatorsEnabled()) {
+                row.alpha = 0.55f
+                row.animate().alpha(1f).setDuration(120L).start()
+            }
         }
     }
 
