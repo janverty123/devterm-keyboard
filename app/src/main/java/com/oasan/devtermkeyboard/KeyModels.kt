@@ -1,6 +1,7 @@
 package com.oasan.devtermkeyboard
 
-enum class KeyboardLayer { LETTERS, SYMBOLS, NAVIGATION, FUNCTIONS }
+enum class KeyboardMode { STANDARD, DEVELOPER }
+enum class KeyboardLayer { LETTERS, SYMBOLS, NAVIGATION, FUNCTIONS, EMOJI }
 enum class KeyboardModifier { CTRL, ALT, META }
 
 sealed class KeyAction {
@@ -16,6 +17,8 @@ sealed class KeyAction {
     object SelectAll : KeyAction()
     object Picker : KeyAction()
     object Voice : KeyAction()
+    object ModeToggle : KeyAction()
+    object Settings : KeyAction()
 }
 
 data class KeySpec(

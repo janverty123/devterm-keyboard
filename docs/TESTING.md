@@ -1,44 +1,42 @@
-# Termora Android device test checklist
+# Keylix Android device test checklist
 
-Use a **new build** from GitHub Actions. Record phone model, Android version, system navigation mode, and target app when reporting problems.
+## Setup
+- [ ] Launcher shows Keylix name and keyboard logo.
+- [ ] Enable Keylix in Android settings and choose as active keyboard.
+- [ ] Select Standard or Dev in the settings screen; selection persists.
+- [ ] Switch modes using the first keyboard-header chip.
 
-## Screen and resizing
-- [ ] The bottom row is entirely above the gesture bar / 3-button navigation.
-- [ ] The floating Android keyboard switcher does not obscure Backspace or Enter.
-- [ ] Rotate landscape: all rows and the Space key remain usable.
-- [ ] Enable compact height in app settings, close/reopen the keyboard, and check changed sizing.
-- [ ] Scroll the top utility toolbar horizontally to reach arrows and Fn.
+## Standard layout
+- [ ] Enter appears as the **rightmost bottom-row key** and is not next to the navigation controls.
+- [ ] The bottom row contains ?123, ☺ emoji, comma, space, period, Enter.
+- [ ] Shift label is visible; tap for one uppercase letter, hold or double-tap for Caps Lock.
+- [ ] Suggestions appear for an English word; selecting a suggestion inserts it.
+- [ ] Type `teh ` in a normal text field; autocorrect changes it to `the `.
+- [ ] Turn Autocorrect or Suggestions off in settings; behavior changes.
+- [ ] Password fields and code/terminal inputs do not expose typed suggestions.
 
-## Typing and mode switching
-- [ ] Type letters, numbers, symbols and punctuation in a normal text field.
-- [ ] Tap Shift then a letter; only that letter is uppercase.
-- [ ] Double-tap or hold Shift until ⇪ appears; type several uppercase letters; tap Shift to unlock.
-- [ ] Long-press Space: system "Change keyboard" picker appears **without inserting a space**.
-- [ ] Tap 🌐: system keyboard picker appears.
+## Dev layout and terminals
+- [ ] A persistent number row and scrollable Esc/Tab/Ctrl/Alt/Shift/Paste/Fn strip appear.
+- [ ] Enter is still at the far right of the bottom row.
+- [ ] Ctrl+C interrupts `sleep 30` in Termux.
+- [ ] Open Vim, test Escape, arrows, Tab, Ctrl shortcuts, and F1–F12 where relevant.
+- [ ] Copy text into Android clipboard, tap Paste in Termux; text inserts but Enter is never sent.
 
-## Copy/paste
-- [ ] Select text in a regular editor, press Copy, then Paste in another field.
-- [ ] Verify Cut / All in the navigation layout.
-- [ ] Test paste into Termux; different apps support clipboard actions differently.
+## Emoji/voice
+- [ ] Emoji categories change and tapping an emoji inserts a glyph (including multi-codepoint emoji).
+- [ ] Switching back to ABC returns to the previous typing mode.
+- [ ] Tap the standalone microphone button; Android speech dialog opens when a provider is installed.
+- [ ] Speak a phrase; its text appears in the original focused field without Enter.
+- [ ] No external speech provider: fallback shows appropriate permission/error.
+- [ ] No mic permission: normal typing still works.
 
-## Terminal
-- [ ] Ctrl+C interrupts a running command (\`sleep 30\`).
-- [ ] Ctrl+D signals end-of-input in a terminal, as applicable.
-- [ ] Esc works in Vim and Nano, and Tab completes a filename in the shell.
-- [ ] Arrow keys, Home, End and F1–F12 where supported.
+## Themes and responsiveness
+- [ ] Preview each of the seven themes.
+- [ ] Press keys; quick **solid** accent flash, no spreading ripple.
+- [ ] Test with navigation gestures and 3-button mode.
+- [ ] Test portrait/landscape and compact sizing; bottom row remains fully tappable.
+- [ ] Optional haptics/character bubbles can be disabled.
 
-## Accessibility/security
-- [ ] Long-press and keys still work with TalkBack enabled.
-- [ ] Check key visibility at large system font scale.
-- [ ] The app requests no INTERNET permission; neither text nor clipboard is logged.
-
-## v0.3.0 new features
-- [ ] Top toolbar contains Shift and Mic (scroll horizontally to see them).
-- [ ] Tap Ctrl then Shift then V in an editor supporting Ctrl+Shift+V.
-- [ ] Copy text into Android clipboard, focus Termux, tap Paste: text appears in the terminal **without automatically executing**.
-- [ ] Press and hold a letter: circular popup appears above key and vanishes on release.
-- [ ] On password inputs, keypress bubble is suppressed.
-- [ ] Turn previews off in Termora settings, reopen keyboard and confirm disabled.
-- [ ] Grant microphone permission in Termora setup, tap Mic, speak a test phrase and verify text inserts (no automatic Enter).
-- [ ] Deny microphone permission and verify keyboard typing still works.
-- [ ] Confirm icon/name are Termora in launcher and keyboard settings.
+## Privacy
+- [ ] Confirm AndroidManifest has no INTERNET permission.
+- [ ] No persistent typing history, clipboard history or saved dictation.

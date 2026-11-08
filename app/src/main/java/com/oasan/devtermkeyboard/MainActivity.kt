@@ -1,15 +1,12 @@
 package com.oasan.devtermkeyboard
 
-import android.Manifest
 import android.app.Activity
 import android.content.ComponentName
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
-import android.graphics.drawable.RippleDrawable
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
@@ -19,245 +16,257 @@ import android.view.ViewGroup
 import android.view.WindowInsets
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
+import android.widget.EditText
+import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ScrollView
+import android.widget.Switch
 import android.widget.TextView
 import kotlin.math.max
 
-/**
- * Termora onboarding: clear permission/activation status and native Material-like
- * cards without dependencies, advertisements, accounts or remote services.
- */
+/** Simple, accessible, Gboard-inspired setup and personalization. */
 class MainActivity : Activity() {
-    private val pageBackground = Color.rgb(13, 21, 34)
-    private val surface = Color.rgb(23, 36, 52)
-    private val elevated = Color.rgb(36, 53, 71)
-    private val foreground = Color.rgb(238, 248, 251)
-    private val secondary = Color.rgb(167, 186, 198)
-    private val accent = Color.rgb(67, 228, 198)
-    private val accentInk = Color.rgb(9, 35, 34)
-    private val permissionRequest = 301
-
-    private var enableState: TextView? = null
-    private var selectedState: TextView? = null
-    private var micState: TextView? = null
+    private val ink = Color.rgb(29, 42, 58)
+    private val hint = Color.rgb(107, 121, 136)
+    private val canvas = Color.rgb(247, 249, 252)
+    private val accent = Color.rgb(37, 124, 138)
+    private val selected = Color.rgb(215, 240, 241)
+    private var enabledStatus: TextView? = null
+    private var selectedStatus: TextView? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        window.statusBarColor = pageBackground
-        window.navigationBarColor = pageBackground
+        window.statusBarColor = canvas
+        window.navigationBarColor = canvas
+        window.decorView.systemUiVisibility =
+            View.SYSTEM_UI_FLAG_LIGHT_STATUS_BAR or View.SYSTEM_UI_FLAG_LIGHT_NAVIGATION_BAR
 
-        val panel = LinearLayout(this).apply {
+        val body = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            setBackgroundColor(pageBackground)
-            setPadding(dp(19), dp(18), dp(19), dp(36))
+            setPadding(dp(20), dp(18), dp(20), dp(36))
+            setBackgroundColor(canvas)
         }
-
-        val hero = card(panel, padded = 18)
+        val hero = card(body)
         val brandLine = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
         brandLine.addView(ImageView(this).apply {
-            setImageResource(R.drawable.ic_termora_mark)
-            background = shape(Color.rgb(7, 27, 38), 18)
+            setImageResource(R.drawable.ic_keylix_keyboard)
+            background = round(Color.rgb(15, 28, 49), 18)
             setPadding(dp(5), dp(5), dp(5), dp(5))
-            contentDescription = "Termora terminal key logo"
-        }, LinearLayout.LayoutParams(dp(82), dp(82)).apply { rightMargin = dp(14) })
-
-        val brandCopy = LinearLayout(this).apply {
-            orientation = LinearLayout.VERTICAL
-        }
-        brandCopy.addView(label("Termora", 32f, foreground, true))
-        brandCopy.addView(label("Your desktop keys, on Android.", 12.5f, secondary))
-        brandLine.addView(brandCopy, LinearLayout.LayoutParams(0,
-            ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
+            contentDescription = "Keylix keyboard icon"
+        }, LinearLayout.LayoutParams(dp(75), dp(75)).apply { rightMargin = dp(14) })
+        val brandCopy = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        brandCopy.addView(label("Keylix", 31f, ink, true))
+        brandCopy.addView(label("Everyday typing. Developer power.", 12.5f, hint))
+        brandLine.addView(brandCopy)
         hero.addView(brandLine)
-
-        hero.addView(label("TERMINAL-READY INPUT", 11f, accent, true).apply {
-            letterSpacing = 0.11f
-            setPadding(0, dp(14), 0, dp(5))
-        })
         hero.addView(label(
-            "Esc, Ctrl, Alt, Shift, function keys, code symbols and clipboard controls. " +
-                "All in a compact keyboard that stays out of your way.",
-            14f, secondary
-        ))
+            "Two keyboard modes for messages, coding, and terminal commands.",
+            13.5f, hint
+        ).apply { setPadding(0, dp(12), 0, 0) })
 
-        heading(panel, "Get started")
-        val enabledCard = card(panel)
-        enabledCard.addView(label("01   Enable keyboard", 17f, foreground, true))
-        enableState = label("Checking Android settings…", 13f, secondary)
-            .also(enabledCard::addView)
-        action(enabledCard, "Open keyboard settings") {
+        heading(body, "Get started")
+        val start = card(body)
+        enabledStatus = label("Checking keyboard status…", 13.5f, hint).also(start::addView)
+        selectedStatus = label("Checking selection…", 13.5f, hint).also(start::addView)
+        val buttons = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        action(buttons, "1  Enable", true) {
             startActivity(Intent(Settings.ACTION_INPUT_METHOD_SETTINGS))
         }
-
-        val selectCard = card(panel)
-        selectCard.addView(label("02   Make Termora active", 17f, foreground, true))
-        selectedState = label("Select Termora as your typing keyboard.", 13f, secondary)
-            .also(selectCard::addView)
-        action(selectCard, "Choose keyboard") {
-            (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager)
-                .showInputMethodPicker()
+        action(buttons, "2  Choose", false) {
+            (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).showInputMethodPicker()
         }
+        start.addView(buttons)
 
-        heading(panel, "Voice typing")
-        val micCard = card(panel)
-        micCard.addView(label("🎙   Voice recognition", 17f, foreground, true))
-        micState = label(
-            "Optional. Uses an Android speech service, such as Google's when installed.",
-            13f, secondary
-        ).also(micCard::addView)
-        action(micCard, "Allow microphone") {
-            askForMic()
-        }
-        micCard.addView(label(
-            "Speech providers may send audio over the internet. Termora never saves recordings.",
-            12f, secondary
+        heading(body, "Keyboard mode")
+        val modes = card(body)
+        modes.addView(label(
+            "Standard for messages. Dev for Termux, navigation, programming symbols and F-keys.",
+            13f, hint
         ))
-
-        heading(panel, "Personalize")
-        val settingsCard = card(panel)
-        settingsCard.addView(label("Keyboard theme", 14f, foreground, true))
-        val themes = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
-        listOf("system" to "Auto", "light" to "Light", "dark" to "Dark").forEach { (id, title) ->
-            val selected = KeyboardPreferences.theme(this) == id
-            val button = Button(this).apply {
-                text = title
-                setAllCaps(false)
+        val selector = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        KeyboardMode.entries.forEach { option ->
+            val active = KeyboardPreferences.mode(this) == option
+            val modeButton = TextView(this).apply {
+                text = if (option == KeyboardMode.STANDARD) "Aa  Standard" else ">_  Developer"
+                gravity = Gravity.CENTER
                 textSize = 13f
-                setTextColor(if (selected) accentInk else this@MainActivity.foreground)
-                background = shape(if (selected) accent else elevated, 12)
+                typeface = Typeface.DEFAULT_BOLD
+                setTextColor(if (active) accent else ink)
+                background = round(if (active) selected else canvas, 12)
+                contentDescription = "Select " + option.name.lowercase() + " mode"
+                setOnClickListener {
+                    KeyboardPreferences.setMode(this@MainActivity, option)
+                    recreate()
+                }
+            }
+            selector.addView(modeButton, LinearLayout.LayoutParams(
+                0, dp(48), 1f
+            ).apply { setMargins(dp(3), dp(12), dp(3), 0) })
+        }
+        modes.addView(selector)
+
+        heading(body, "Text correction")
+        val textSettings = card(body)
+        toggle(textSettings, "Suggestions",
+            "Offline English word predictions in Standard mode.",
+            KeyboardPreferences.predictions(this)) {
+            KeyboardPreferences.setPredictions(this, it)
+        }
+        divider(textSettings)
+        toggle(textSettings, "Autocorrect",
+            "Conservative spelling fixes, never in Dev mode or passwords.",
+            KeyboardPreferences.autocorrect(this)) {
+            KeyboardPreferences.setAutocorrect(this, it)
+        }
+
+        heading(body, "Themes")
+        val themeCard = card(body)
+        val themeGrid = GridLayout(this).apply { columnCount = 2 }
+        KeyboardPreferences.THEMES.forEachIndexed { index, entry ->
+            val id = entry.first
+            val title = entry.second
+            val active = KeyboardPreferences.theme(this) == id
+            val dotColor = when (id) {
+                "light" -> Color.rgb(235, 241, 248)
+                "dark" -> Color.rgb(61, 72, 87)
+                "midnight" -> Color.rgb(17, 27, 45)
+                "mint" -> Color.rgb(104, 192, 170)
+                "slate" -> Color.rgb(65, 83, 109)
+                "rose" -> Color.rgb(223, 159, 180)
+                else -> Color.rgb(164, 189, 206)
+            }
+            val chip = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+                setPadding(dp(8), dp(5), dp(5), dp(5))
+                background = round(if (active) selected else canvas, 11)
+                contentDescription = "Theme " + title
                 setOnClickListener {
                     KeyboardPreferences.setTheme(this@MainActivity, id)
                     recreate()
                 }
             }
-            themes.addView(button, LinearLayout.LayoutParams(0, dp(48), 1f).apply {
-                setMargins(dp(2), dp(5), dp(2), dp(3))
+            chip.addView(View(this).apply { background = round(dotColor, 12) },
+                LinearLayout.LayoutParams(dp(24), dp(24)).apply { rightMargin = dp(8) })
+            chip.addView(label(title + if (active) " ✓" else "", 13f,
+                if (active) accent else ink, active))
+            themeGrid.addView(chip, GridLayout.LayoutParams().apply {
+                rowSpec = GridLayout.spec(index / 2)
+                columnSpec = GridLayout.spec(index % 2, 1f)
+                width = 0
+                height = dp(47)
+                setMargins(dp(3), dp(4), dp(3), dp(4))
             })
         }
-        settingsCard.addView(themes, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ))
-        settingToggle(settingsCard, "Compact keyboard",
-            "Smaller key rows for more terminal space.",
+        themeCard.addView(themeGrid)
+
+        heading(body, "Preferences")
+        val preferences = card(body)
+        toggle(preferences, "Compact key height",
+            "More screen space for Termux and code editors.",
             KeyboardPreferences.isCompact(this)) {
             KeyboardPreferences.setCompact(this, it)
         }
-        settingToggle(settingsCard, "Keypress bubbles",
-            "Circular letter previews, just above the keys.",
+        divider(preferences)
+        toggle(preferences, "Letter popups",
+            "Small character preview when tapping.",
             KeyboardPreferences.hasKeyPreview(this)) {
             KeyboardPreferences.setKeyPreview(this, it)
         }
-        settingToggle(settingsCard, "Haptic feedback",
-            "A gentle vibration when tapping keys.",
+        divider(preferences)
+        toggle(preferences, "Haptic feedback",
+            "Gentle vibration for keypresses.",
             KeyboardPreferences.hasHaptics(this)) {
             KeyboardPreferences.setHaptics(this, it)
         }
 
-        heading(panel, "Quick guide")
-        val guide = card(panel)
-        guide.addView(label("SHIFT   Tap once · double-tap or hold for Caps Lock", 13f, foreground))
-        guide.addView(spacing(dp(9)))
-        guide.addView(label("PASTE   Use the clipboard button on the toolbar.", 13f, foreground))
-        guide.addView(spacing(dp(9)))
-        guide.addView(label("VOICE   Tap the microphone after granting permission.", 13f, foreground))
-        guide.addView(spacing(dp(9)))
-        guide.addView(label("SWITCH   Hold Space for Android's keyboard chooser.", 13f, foreground))
-        guide.addView(spacing(dp(9)))
-        guide.addView(label("TERMUX   Clipboard text is inserted as terminal input, without automatically pressing Enter.", 12.5f, secondary))
+        heading(body, "Voice and emoji")
+        val voice = card(body)
+        voice.addView(label("🎙  Mic is located beside the mode switch.", 14f, ink, true))
+        voice.addView(label(
+            "Tapping it opens your installed Android speech recognizer. " +
+            "If an external provider is unavailable, Keylix offers a fallback with microphone permission. " +
+            "A speech provider may use internet processing.",
+            12.5f, hint
+        ).apply { setPadding(0, dp(8), 0, 0) })
+        voice.addView(label(
+            "☺  Use the emoji button on the bottom row. Standard and Dev have the same emoji picker.",
+            12.5f, hint
+        ).apply { setPadding(0, dp(10), 0, 0) })
 
-        panel.addView(label("Termora 0.3.0  ·  Developer preview", 12f, secondary).apply {
+        heading(body, "Try typing")
+        val test = card(body)
+        test.addView(EditText(this).apply {
+            hint = "Test typing, predictions and emojis…"
+            minLines = 2
+            textSize = 15f
+            setPadding(dp(10), dp(10), dp(10), dp(10))
+            background = round(canvas, 11)
+        })
+        body.addView(label("Keylix v0.4.0  •  Developer preview", 12f, hint).apply {
             gravity = Gravity.CENTER
-            setPadding(0, dp(16), 0, dp(8))
+            setPadding(0, dp(22), 0, dp(14))
         })
 
         val scroll = ScrollView(this).apply {
             isFillViewport = true
             isVerticalScrollBarEnabled = false
-            setBackgroundColor(pageBackground)
-            addView(panel)
+            setBackgroundColor(canvas)
+            addView(body)
         }
-        scroll.setOnApplyWindowInsetsListener { view, insets ->
+        scroll.setOnApplyWindowInsetsListener { v, insets ->
             val top: Int
             val bottom: Int
             if (Build.VERSION.SDK_INT >= 30) {
-                val system = insets.getInsets(
+                val bars = insets.getInsets(
                     WindowInsets.Type.statusBars() or WindowInsets.Type.navigationBars()
                 )
-                top = system.top
-                bottom = system.bottom
+                top = bars.top
+                bottom = bars.bottom
             } else {
                 @Suppress("DEPRECATION")
                 top = insets.systemWindowInsetTop
                 @Suppress("DEPRECATION")
                 bottom = insets.systemWindowInsetBottom
             }
-            view.setPadding(0, max(0, top), 0, max(0, bottom))
+            v.setPadding(0, max(0, top), 0, max(0, bottom))
             insets
         }
         setContentView(scroll)
-
-        if (intent.getBooleanExtra("request_voice_permission", false)) {
-            intent.removeExtra("request_voice_permission")
-            panel.post { askForMic() }
-        }
     }
 
     override fun onResume() {
         super.onResume()
         val ime = getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager
-        val component = ComponentName(this, DeveloperKeyboardService::class.java)
-        val enabled = ime.enabledInputMethodList.any { it.id == component.flattenToShortString() }
-        val active = Settings.Secure.getString(contentResolver,
-            Settings.Secure.DEFAULT_INPUT_METHOD) == component.flattenToShortString()
-        enableState?.text = if (enabled) "✓ Enabled in Android settings" else
-            "Turn on Termora under on-screen keyboards."
-        selectedState?.text = if (active) "✓ Termora is your selected keyboard" else
-            "Select Termora from the Android keyboard picker."
-        micState?.text = if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
-            PackageManager.PERMISSION_GRANTED) {
-            "✓ Microphone enabled. Tap 🎙 on the keyboard toolbar to dictate."
-        } else {
-            "Optional. Grant microphone access to use your installed speech service."
-        }
+        val id = ComponentName(this, DeveloperKeyboardService::class.java).flattenToShortString()
+        enabledStatus?.text = if (ime.enabledInputMethodList.any { it.id == id })
+            "✓ Keyboard enabled in Android" else "Enable Keylix in Android keyboard settings."
+        selectedStatus?.text = if (Settings.Secure.getString(contentResolver,
+            Settings.Secure.DEFAULT_INPUT_METHOD) == id)
+            "✓ Keylix is active" else "Select Keylix to start typing."
     }
 
-    private fun askForMic() {
-        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
-            PackageManager.PERMISSION_GRANTED) return
-        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), permissionRequest)
-    }
-
-    override fun onRequestPermissionsResult(
-        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
-    ) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == permissionRequest) onResume()
-    }
-
-    private fun heading(parent: LinearLayout, title: String) {
-        parent.addView(label(title, 19f, foreground, true).apply {
-            setPadding(dp(3), dp(25), 0, dp(11))
+    private fun heading(parent: LinearLayout, value: String) {
+        parent.addView(label(value, 18f, ink, true).apply {
+            setPadding(dp(4), dp(20), dp(4), dp(9))
         })
     }
-
-    private fun card(parent: LinearLayout, padded: Int = 17): LinearLayout {
+    private fun card(parent: LinearLayout): LinearLayout {
         val card = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            background = shape(surface, 22)
-            setPadding(dp(padded), dp(padded), dp(padded), dp(padded))
-            elevation = dp(2).toFloat()
+            background = round(Color.WHITE, 19)
+            setPadding(dp(17), dp(16), dp(17), dp(16))
+            elevation = dp(1).toFloat()
         }
         parent.addView(card, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-        ).apply { bottomMargin = dp(11) })
+        ).apply { bottomMargin = dp(5) })
         return card
     }
-
     private fun label(value: String, size: Float, color: Int, strong: Boolean = false) =
         TextView(this).apply {
             text = value
@@ -269,63 +278,50 @@ class MainActivity : Activity() {
                 if (strong) Typeface.BOLD else Typeface.NORMAL
             )
         }
-
-    private fun action(parent: LinearLayout, title: String, click: () -> Unit) {
-        val button = Button(this).apply {
+    private fun action(parent: LinearLayout, title: String, primary: Boolean, click: () -> Unit) {
+        parent.addView(Button(this).apply {
             text = title
             setAllCaps(false)
             textSize = 14f
-            setTextColor(accentInk)
-            typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
-            background = RippleDrawable(
-                ColorStateList.valueOf(0x55000000),
-                shape(accent, 13), null
-            )
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(if (primary) Color.WHITE else accent)
+            background = round(if (primary) accent else selected, 12)
             setOnClickListener { click() }
-        }
-        parent.addView(button, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(49)
-        ).apply { topMargin = dp(13) })
+        }, LinearLayout.LayoutParams(0, dp(49), 1f).apply {
+            rightMargin = dp(6)
+            topMargin = dp(12)
+        })
     }
-
-    private fun settingToggle(
-        parent: LinearLayout, title: String, description: String,
-        checked: Boolean, onToggle: (Boolean) -> Unit
-    ) {
+    private fun toggle(parent: LinearLayout, title: String, description: String,
+                       value: Boolean, update: (Boolean) -> Unit) {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
-            setPadding(0, dp(12), 0, dp(8))
+            setPadding(0, dp(6), 0, dp(6))
         }
-        val labels = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
-        labels.addView(label(title, 14f, foreground, true))
-        labels.addView(label(description, 12f, secondary))
-        row.addView(labels, LinearLayout.LayoutParams(0,
-            ViewGroup.LayoutParams.WRAP_CONTENT, 1f))
-        val toggle = android.widget.Switch(this).apply {
-            isChecked = checked
-            buttonTintListOrAccent()
-            setOnCheckedChangeListener { _, selected -> onToggle(selected) }
+        val words = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        words.addView(label(title, 14.5f, ink, true))
+        words.addView(label(description, 12.3f, hint))
+        row.addView(words, LinearLayout.LayoutParams(
+            0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f
+        ))
+        row.addView(Switch(this).apply {
+            isChecked = value
+            thumbTintList = ColorStateList.valueOf(accent)
+            trackTintList = ColorStateList.valueOf(Color.rgb(144, 188, 192))
             contentDescription = title
-        }
-        row.addView(toggle)
+            setOnCheckedChangeListener { _, checked -> update(checked) }
+        })
         parent.addView(row)
     }
-
-    private fun android.widget.Switch.buttonTintListOrAccent() {
-        thumbTintList = ColorStateList.valueOf(accent)
-        trackTintList = ColorStateList.valueOf(Color.rgb(72, 111, 120))
+    private fun divider(parent: LinearLayout) {
+        parent.addView(View(this).apply { setBackgroundColor(Color.rgb(224, 232, 240)) },
+            LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(1))
+                .apply { topMargin = dp(6); bottomMargin = dp(6) })
     }
-
-    private fun shape(color: Int, radius: Int) = GradientDrawable().apply {
+    private fun round(color: Int, radius: Int) = GradientDrawable().apply {
         setColor(color)
         cornerRadius = dp(radius).toFloat()
     }
-
-    private fun spacing(height: Int) = View(this).apply {
-        layoutParams = LinearLayout.LayoutParams(1, height)
-    }
-
-    private fun dp(value: Int) =
-        (value * resources.displayMetrics.density + 0.5f).toInt()
+    private fun dp(value: Int) = (value * resources.displayMetrics.density + 0.5f).toInt()
 }

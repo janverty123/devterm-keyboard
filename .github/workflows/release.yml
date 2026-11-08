@@ -80,13 +80,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          ASSET="Termora-${TAG}.apk"
+          ASSET="Keylix-${TAG}.apk"
           cp artifact/app-debug.apk "$ASSET"
           sha256sum "$ASSET" > "${ASSET}.sha256"
           gh release create "$TAG" "$ASSET" "${ASSET}.sha256" \
             --repo "$GITHUB_REPOSITORY" \
             --target "$TARGET_SHA" \
-            --title "Termora ${TAG}" \
+            --title "Keylix ${TAG}" \
             --notes-file docs/RELEASE_NOTES.md \
             --prerelease
           echo "### Direct download" >> "$GITHUB_STEP_SUMMARY"

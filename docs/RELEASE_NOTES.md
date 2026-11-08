@@ -1,22 +1,22 @@
-# Termora v0.3.0 — Developer preview
+# Keylix v0.4.0 — Dual-mode keyboard preview
 
-DevTerm Keyboard has been renamed **Termora**. The Android package ID stays the same so it remains one installed keyboard.
+## New
+- The app is renamed **Keylix**, with a minimal native keyboard/terminal icon.
+- Standard/Dev switching from Settings **and** the keyboard header; user preference persisted.
+- Rightmost Enter, full-text Shift key, familiar Gboard-like Space and emoji placement.
+- Functional categorized Unicode emoji picker, with six categories and a return-to-letters control.
+- Lightweight offline English word suggestions and conservative autocorrect in Standard mode. Both can be switched off.
+- Voice via Android's speech-recognition activity, with a fallback recognizer when available, rather than relying on a speech recognizer hidden in the keyboard service.
+- Seven appearance themes and accent-color key flashes (no spreading ripple).
+- Cleaner settings with setup status and a text field for keyboard testing.
+- Expanded source organization, documentation and unit tests.
 
-## Highlights
-- Permanent toolbar **Shift**, additional Shift on Nav, and Ctrl+Shift+V combinations where supported.
-- Reliable text-oriented **Paste** action for Termux via the InputConnection, without executing shell commands automatically.
-- Gboard-style animated round **letter previews** (configurable, hidden for password fields).
-- Optional **microphone/voice typing** using the device's installed Android speech recognition service.
-- New **Termora launcher icon**, clean onboarding, activation state display, theme and haptics controls.
+## Install on Android
+In the release **Assets**, tap **Keylix-v0.4.0.apk**, not Source code ZIP. Install it, open Keylix, enable it as a system keyboard and select it. Tap the **Aa Standard** / **>_ Dev** chip in the keyboard header to switch modes.
 
-## Installation
-1. Under **Assets**, tap `Termora-v0.3.0.apk` directly (not the source ZIP).
-2. Open the APK on Android and approve installation from your browser/file manager if needed.
-3. Open **Termora**, enable it in Android keyboard settings, and choose it as your active keyboard.
-4. In Termora settings optionally enable the microphone permission for voice typing.
+## Notes
+This is a debug-signed prerelease. Installing over a differently signed older version may fail; uninstall/reinstall if needed, and reenable the keyboard. The existing package ID is unchanged.
 
-## Important notices
-- This is a **debug-signed prerelease**, not a production-signed app. Uninstalling a previous differently signed debug build may be needed; doing so clears its local appearance settings.
-- The keyboard itself has no Internet permission and does not save dictated audio or keystrokes. **Android speech recognition services may send audio to their providers.** Mic access is optional.
-- Termux and other apps may handle clipboard/key combinations differently. The Paste key inserts clipboard text without sending Enter; test before pasting untrusted shell commands.
-- No guarantee of Gboard-specific proprietary functionality; this is a standalone native Android keyboard.
+Keylix itself has no internet permission or typing history. Optional speech recognition uses other installed providers that may process voice online. **Voice and pasted text are inserted without automatically pressing Enter.**
+
+Predictions and autocorrect are intentionally lightweight; this is not a copy of Gboard's proprietary engine. Actual Termux paste and speech behavior, including OEM-specific Android 16 edge-to-edge controls, should be tested on a device.
