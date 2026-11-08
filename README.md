@@ -18,7 +18,7 @@ A lightweight **Android developer keyboard** built with Kotlin and `InputMethodS
 
 ## Get the APK
 
-**Direct Android installation:** open the [latest DevTerm Keyboard release](https://github.com/janverty123/devterm-keyboard/releases/latest) or [all GitHub Releases](https://github.com/janverty123/devterm-keyboard/releases), expand **Assets**, and tap the `.apk` file. There is no need to download or extract the GitHub Actions ZIP.
+**Direct Android installation:** open the [current v0.2.0 developer preview](https://github.com/janverty123/devterm-keyboard/releases/tag/v0.2.0) or [all GitHub Releases](https://github.com/janverty123/devterm-keyboard/releases), expand **Assets**, and tap the `.apk` file. There is no need to download or extract the GitHub Actions ZIP.
 
 Release assets are automatically published for newly versioned, successful `main`-branch APK builds. The release workflow reads `versionName` from `app/build.gradle.kts`, skips an already published version, and attaches a direct-install APK plus its SHA-256 checksum.
 
