@@ -49,6 +49,15 @@ class DeveloperKeyboardService : InputMethodService() {
     private var autoCaps = false
     private var lastShiftTap = 0L
     private var safeBottomPx = -1
+    private val preview by lazy { KeyPreview(this) }
+    private val voice by lazy {
+        VoiceInputController(this,
+            update = { _ -> updateLabels() },
+            onText = { spoken ->
+                // Do not send Enter: voice input must never run shell commands.
+                currentInputConnection?.commitText(spoken, 1)
+            })
+    }
 
     private val handler = Handler(Looper.getMainLooper())
     private var repeatTask: Runnable? = null
@@ -115,6 +124,8 @@ class DeveloperKeyboardService : InputMethodService() {
 
     override fun onFinishInput() {
         clearRepeat()
+        preview.dismiss()
+        voice.close()
         modifiers.clear()
         oneShotShift = false
         capsLock = false
@@ -123,6 +134,8 @@ class DeveloperKeyboardService : InputMethodService() {
 
     override fun onDestroy() {
         clearRepeat()
+        preview.dismiss()
+        voice.close()
         root = null
         super.onDestroy()
     }
@@ -162,6 +175,7 @@ class DeveloperKeyboardService : InputMethodService() {
     private fun render() {
         val panel = root ?: return
         clearRepeat()
+        preview.dismiss()
         keyViews.clear()
         panel.removeAllViews()
         panel.setBackgroundColor(palette.background)
@@ -176,6 +190,7 @@ class DeveloperKeyboardService : InputMethodService() {
         KeyLayouts.toolbar().forEach { spec ->
             val width = when (spec.action) {
                 KeyAction.Copy, KeyAction.Paste -> dp(51)
+                KeyAction.Voice -> dp(48)
                 else -> dp(44)
             }
             toolRow.addView(createKey(spec, true), LinearLayout.LayoutParams(
@@ -268,8 +283,19 @@ class DeveloperKeyboardService : InputMethodService() {
         }
         view.setOnTouchListener { target, event ->
             when (event.actionMasked) {
-                MotionEvent.ACTION_DOWN -> animateKey(target, true)
+                MotionEvent.ACTION_DOWN -> {
+                    animateKey(target, true)
+                    if (spec.action is KeyAction.Text) {
+                        val raw = spec.action.value
+                        val shown = if (raw.length == 1 && raw[0].isLetter() && shouldUppercase()) {
+                            raw.uppercase(Locale.ROOT)
+                        } else raw
+                        preview.show(target, shown, KeyboardPreferences.dark(this),
+                            currentInputEditorInfo?.inputType ?: 0)
+                    }
+                }
                 MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    preview.dismiss()
                     animateKey(target, false)
                     if (target === repeatView) clearRepeat()
                 }
@@ -282,6 +308,7 @@ class DeveloperKeyboardService : InputMethodService() {
     private fun paint(view: TextView, spec: KeySpec) {
         val selected = when (val a = spec.action) {
             KeyAction.Shift -> capsLock || oneShotShift
+            KeyAction.Voice -> voice.isActive
             is KeyAction.Modifier -> a.modifier in modifiers
             is KeyAction.Layer -> a.layer == layer
             else -> false
@@ -295,6 +322,8 @@ class DeveloperKeyboardService : InputMethodService() {
         val label = when {
             spec.action === KeyAction.Shift && capsLock -> "⇪"
             spec.action === KeyAction.Shift -> "⇧"
+            spec.action === KeyAction.Voice && voice.isActive -> "●"
+            spec.action === KeyAction.Voice -> "🎙"
             spec.action is KeyAction.Text && spec.action.value.length == 1 &&
                 spec.action.value[0].isLetter() && shouldUppercase() ->
                 spec.label.uppercase(Locale.ROOT)
@@ -390,6 +419,7 @@ class DeveloperKeyboardService : InputMethodService() {
                 consumeOneShot()
             }
             KeyAction.Picker -> chooseKeyboard()
+            KeyAction.Voice -> voice.toggle()
         }
     }
 
@@ -451,12 +481,16 @@ class DeveloperKeyboardService : InputMethodService() {
     }
 
     private fun pasteClipboard() {
+        // Termux often reports success for a context-menu paste that never
+        // reaches its terminal InputConnection. Send the clipboard text
+        // directly, using the same path as normal on-screen keyboard typing.
         val connection = currentInputConnection ?: return
-        if (connection.performContextMenuAction(android.R.id.paste)) return
         val clip = clipboard().primaryClip ?: return
         if (clip.itemCount == 0) return
         val text = clip.getItemAt(0).coerceToText(this) ?: return
-        connection.commitText(text, 1)
+        if (!connection.commitText(text, 1)) {
+            connection.performContextMenuAction(android.R.id.paste)
+        }
     }
 
     private fun chooseKeyboard() {

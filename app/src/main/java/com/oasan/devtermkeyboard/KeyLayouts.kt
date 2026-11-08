@@ -22,6 +22,8 @@ internal object KeyLayouts {
         key("Tab", KeyEvent.KEYCODE_TAB),
         modifier("Ctrl", KeyboardModifier.CTRL),
         modifier("Alt", KeyboardModifier.ALT),
+        KeySpec("⇧", KeyAction.Shift, 1.15f, "Shift, double tap or hold for Caps Lock"),
+        KeySpec("Mic", KeyAction.Voice, 1.15f, "Voice typing"),
         KeySpec("Copy", KeyAction.Copy, 1.25f),
         KeySpec("Paste", KeyAction.Paste, 1.25f),
         key("←", KeyEvent.KEYCODE_DPAD_LEFT),
@@ -77,6 +79,7 @@ internal object KeyLayouts {
                 key("↓", KeyEvent.KEYCODE_DPAD_DOWN), key("→", KeyEvent.KEYCODE_DPAD_RIGHT)
             ),
             listOf(
+                KeySpec("⇧", KeyAction.Shift, 1.0f, "Shift, double tap or hold for Caps Lock"),
                 KeySpec("Copy", KeyAction.Copy), KeySpec("Paste", KeyAction.Paste),
                 KeySpec("Cut", KeyAction.Cut), KeySpec("All", KeyAction.SelectAll),
                 shortcut("Undo", KeyEvent.KEYCODE_Z),
@@ -84,7 +87,9 @@ internal object KeyLayouts {
             ),
             listOf(
                 shortcut("^C", KeyEvent.KEYCODE_C), shortcut("^D", KeyEvent.KEYCODE_D),
-                shortcut("^Z", KeyEvent.KEYCODE_Z), shortcut("^L", KeyEvent.KEYCODE_L),
+                shortcut("^Z", KeyEvent.KEYCODE_Z), KeySpec("C⇧V", KeyAction.Shortcut(KeyEvent.KEYCODE_V,
+                    KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON or
+                    KeyEvent.META_SHIFT_ON or KeyEvent.META_SHIFT_LEFT_ON)),
                 shortcut("^A", KeyEvent.KEYCODE_A), shortcut("^E", KeyEvent.KEYCODE_E)
             ),
             listOf(

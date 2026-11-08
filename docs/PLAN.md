@@ -1,4 +1,4 @@
-# DevTerm Keyboard — development roadmap
+# Termora — development roadmap
 
 ## Milestone 0.2 (implemented in source)
 - [x] Keyboard input method with four layouts and Android setup UI
@@ -22,3 +22,12 @@
 
 ## Manual acceptance checks
 See TESTING.md. A successful CI compile alone does not prove correct behavior in the user's specific terminal emulator.
+
+## v0.3.0 features
+- [x] Permanent Shift toolbar / Shift on navigation layer
+- [x] Direct clipboard-text paste for Termux-like InputConnections
+- [x] Configurable circular key previews
+- [x] Optional Android speech recognition with runtime microphone permission
+- [x] Original Termora native vector app icon and revamped onboarding
+- [ ] Real Android device testing for Google speech services and Termux clipboard
+- [ ] A stable release signing key for seamless updates

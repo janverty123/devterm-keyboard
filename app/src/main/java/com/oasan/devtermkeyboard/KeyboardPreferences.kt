@@ -9,6 +9,8 @@ internal object KeyboardPreferences {
     private const val THEME = "theme"
     private const val COMPACT = "compact"
     private const val HAPTIC = "haptic"
+    private const val PREVIEW = "key_preview"
+
     fun theme(context: Context): String =
         context.getSharedPreferences(STORE, Context.MODE_PRIVATE).getString(THEME, "system") ?: "system"
     fun setTheme(context: Context, value: String) {
@@ -24,6 +26,11 @@ internal object KeyboardPreferences {
         context.getSharedPreferences(STORE, Context.MODE_PRIVATE).getBoolean(HAPTIC, false)
     fun setHaptics(context: Context, value: Boolean) {
         context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().putBoolean(HAPTIC, value).apply()
+    }
+    fun hasKeyPreview(context: Context): Boolean =
+        context.getSharedPreferences(STORE, Context.MODE_PRIVATE).getBoolean(PREVIEW, true)
+    fun setKeyPreview(context: Context, value: Boolean) {
+        context.getSharedPreferences(STORE, Context.MODE_PRIVATE).edit().putBoolean(PREVIEW, value).apply()
     }
     fun dark(context: Context): Boolean = when (theme(context)) {
         "dark" -> true

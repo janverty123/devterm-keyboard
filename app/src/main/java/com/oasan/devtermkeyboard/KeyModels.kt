@@ -15,6 +15,7 @@ sealed class KeyAction {
     object Cut : KeyAction()
     object SelectAll : KeyAction()
     object Picker : KeyAction()
+    object Voice : KeyAction()
 }
 
 data class KeySpec(

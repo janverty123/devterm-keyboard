@@ -1,22 +1,22 @@
-# DevTerm Keyboard v0.2.0 — Developer Preview
+# Termora v0.3.0 — Developer preview
 
-An offline Android developer keyboard for Termux and coding apps. Install the **APK asset** below, not the automatically generated Source code ZIP.
+DevTerm Keyboard has been renamed **Termora**. The Android package ID stays the same so it remains one installed keyboard.
 
-### Changes
-- Adaptive keyboard height with extra space for Android navigation controls.
-- Rounded keys, optional light/dark themes, subtle animations and haptics.
-- Hold Space or press 🌐 to open the Android keyboard picker.
-- Tap Shift for one uppercase letter; double-tap or long-press for Caps Lock.
-- Copy and Paste toolbar buttons; Cut and Select All in the navigation layout.
-- Terminal controls including Esc, Tab, Ctrl, Alt, arrows, F1–F12 and programming symbols.
+## Highlights
+- Permanent toolbar **Shift**, additional Shift on Nav, and Ctrl+Shift+V combinations where supported.
+- Reliable text-oriented **Paste** action for Termux via the InputConnection, without executing shell commands automatically.
+- Gboard-style animated round **letter previews** (configurable, hidden for password fields).
+- Optional **microphone/voice typing** using the device's installed Android speech recognition service.
+- New **Termora launcher icon**, clean onboarding, activation state display, theme and haptics controls.
 
-### Install
-1. Tap `DevTerm-Keyboard-v0.2.0.apk` in the release Assets section.
-2. Install it on Android (approve the browser/file manager's install permission if prompted).
-3. Open DevTerm Keyboard, enable it in system keyboard settings, and select it.
-4. Open Termux or your code editor.
+## Installation
+1. Under **Assets**, tap `Termora-v0.3.0.apk` directly (not the source ZIP).
+2. Open the APK on Android and approve installation from your browser/file manager if needed.
+3. Open **Termora**, enable it in Android keyboard settings, and choose it as your active keyboard.
+4. In Termora settings optionally enable the microphone permission for voice typing.
 
-### Important
-This is a prerelease **debug-signed** APK, not a stable production-signed release. Device behavior has not been verified on every Android version. A differently signed older debug build may require uninstalling first; this resets the keyboard app's local preferences. No internet permission, typed text logging, or clipboard history.
-
-The APK can be installed directly without unzipping a workflow artifact.
+## Important notices
+- This is a **debug-signed prerelease**, not a production-signed app. Uninstalling a previous differently signed debug build may be needed; doing so clears its local appearance settings.
+- The keyboard itself has no Internet permission and does not save dictated audio or keystrokes. **Android speech recognition services may send audio to their providers.** Mic access is optional.
+- Termux and other apps may handle clipboard/key combinations differently. The Paste key inserts clipboard text without sending Enter; test before pasting untrusted shell commands.
+- No guarantee of Gboard-specific proprietary functionality; this is a standalone native Android keyboard.

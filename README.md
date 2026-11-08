@@ -1,54 +1,41 @@
-# DevTerm Keyboard
+# Termora
 
-A lightweight **Android developer keyboard** built with Kotlin and `InputMethodService`. Designed for Termux, SSH terminals, editors, and regular Android text fields, without needing a laptop or root access.
+**Terminal-ready typing for Android.** A compact native Android keyboard for Termux, SSH, code editors and normal input fields. Formerly called DevTerm Keyboard, Termora keeps the same app ID (so Android recognizes the app when upgrading).
 
-## v0.2 — Adaptive keyboard
+## Install
 
-- Compact Gboard-inspired rounded keys, ripple effects and subtle press animations.
-- Resizes keyboard key height for short portrait and landscape screens.
-- Reserves a navigation-bar safe area on Android 15/16 (including an OEM fallback), so the Android keyboard switcher does not overlap the final row.
-- Letter, symbol, navigation, and F1–F12 layouts.
-- A horizontally scrollable top developer toolbar with Esc, Tab, Ctrl, Alt, **Copy**, **Paste**, arrows, Fn and Meta.
-- **Hold Space** (or tap 🌐) to open Android's **Change keyboard** picker; no extra permissions required.
-- **Tap Shift** to capitalize the next letter, **double-tap or hold Shift** for Caps Lock, tap Shift to unlock. Android text fields requesting sentence capitalization are respected.
-- Long-press Backspace and arrow keys to repeat actions.
-- Copy, Cut, Paste and Select All through the target application's InputConnection. Clipboard fallback is used for Paste and copying selected text when supported.
-- Optional light, dark or follow-system theme, compact keyboard height and haptics — configured from the DevTerm app.
-- No `INTERNET` permission, telemetry, clipboard history, or logging.
+Get the [latest GitHub Release](https://github.com/janverty123/devterm-keyboard/releases) and tap **Termora-v0.3.0.apk** under **Assets** for a direct installation—no ZIP extraction required. This is a debug-signed prerelease; Android may require uninstalling a differently signed previous debug build. Re-enable the keyboard after reinstalling. Do not install both under the same package ID.
 
-## Get the APK
+## What's new in v0.3.0
 
-**Direct Android installation:** open the [current v0.2.0 developer preview](https://github.com/janverty123/devterm-keyboard/releases/tag/v0.2.0) or [all GitHub Releases](https://github.com/janverty123/devterm-keyboard/releases), expand **Assets**, and tap the `.apk` file. There is no need to download or extract the GitHub Actions ZIP.
+- **Shift on the permanent terminal toolbar** and in the navigation layout; single-tap Shift, double-tap or long-press to lock Caps.
+- **Improved Termux clipboard paste:** keyboard sends clipboard text using `InputConnection.commitText()`, rather than relying solely on Android's context-menu paste action. Clipboard insertion never presses Enter automatically.
+- **Circle-shaped letter preview bubbles** on touch, animated subtly, with a Settings toggle. No preview on password fields.
+- **Voice typing** via Android's available speech service (such as Google Speech Services when installed). The app asks for microphone permission only when you enable voice. A provider may transmit audio online; check its privacy policy. Termora itself has no network permission and never stores recordings.
+- **New Termora name and native icon**, redesigned launcher/setup experience with activation status, privacy explanation, accessible toggles, and light/dark themes.
+- Esc, Ctrl, Alt, arrows, Copy/Paste, symbol navigation and F1–F12 remain supported.
 
-Release assets are automatically published for newly versioned, successful `main`-branch APK builds. The release workflow reads `versionName` from `app/build.gradle.kts`, skips an already published version, and attaches a direct-install APK plus its SHA-256 checksum.
+## Termux paste and Shift
 
-**Signing:** these are prerelease debug APKs. The v0.2.0 release reuses the verified v0.2.0 CI build to avoid a signature change from that build. Future debug builds may have different signatures until a permanent signing key is set up. If Android reports an app signature mismatch, uninstall the previously installed debug version, then install the new version and enable the keyboard again.
+Shift is available in the top developer toolbar. You can tap **Ctrl**, then **Shift**, then **V** to emit Ctrl+Shift+V where supported. Termux documents Ctrl+Alt+V as a *hardware keyboard* shortcut, which isn't guaranteed to work through Android's touch keyboard. The **Paste** key is the recommended method: it now commits clipboard text directly to the focused terminal. If a terminal ignores the clipboard insertion, use Termux's native long-press paste menu. See [Termux keyboard reference](https://github.com/termux/termux-tools/blob/master/doc/termux.1.md.in).
 
-## Enable
+## Permissions and privacy
 
-1. Open DevTerm after installing.
-2. Tap **Enable DevTerm Keyboard** and turn it on in Android's settings.
-3. Tap **Choose active keyboard** and select DevTerm.
-4. Open Termux or your editor, and type. Use `?123`, `Nav` and `Fn` for extra keys.
+- `RECORD_AUDIO`: optional, required to start speech recognition; requested at runtime, not needed for normal keyboard use.
+- No `INTERNET` permission in the keyboard app, no analytics, no typed-text logging, no persistent clipboard history.
+- The separate installed speech provider (such as Google's) **may process audio online**. Voice input does not automatically execute any terminal command.
+- Android rightly warns that all keyboards can potentially access entered text. Review source before using with sensitive data.
 
-## Build from source
+## Developer setup
 
-Android Studio with JDK 17, SDK Platform 35, Gradle 8.11.1 (or CI's GitHub-hosted runner) is supported:
+- Kotlin Android `InputMethodService`, target SDK 35, minimum SDK 26.
+- Build with Java 17 and Gradle 8.11.1 using `gradle assembleDebug` or GitHub Actions.
+- Main source: `app/src/main/java/com/oasan/devtermkeyboard/`.
+- Four keyboard layers: letters, symbols, navigation, function keys.
+- Source project kept under the existing `com.oasan.devtermkeyboard` application ID for upgrade compatibility.
 
-```sh
-gradle assembleDebug
-```
+Refer to [device test checklist](docs/TESTING.md) for Android 16/Termux verification, [roadmap](docs/PLAN.md), and [GitHub Releases](https://github.com/janverty123/devterm-keyboard/releases) for packaged APKs.
 
-See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/TESTING.md](docs/TESTING.md) for on-device checks.
+## Known limitations
 
-## Compatibility and caveats
-
-Some apps, including Termux and SSH clients, decide which `KeyEvent` combinations to process. Standard `InputConnection` clipboard actions may not be supported by a terminal session even if they work in editable text fields. Hold Shift to lock uppercase when typing; Fn keys are sent as key events, not special text.
-
-**The GitHub CI build is not a substitute for physical device testing.** Please report the device, Android version, layout mode and target app when a key is not recognized.
-
-Android warns when enabling any third-party keyboard because such software can see typed input. Only install source you trust. The app intentionally does not access the network or keep a history of entered text.
-
-## License
-
-No license has been selected yet. The repository owner should choose one before broad redistribution.
+Actual key behavior depends on the receiving terminal/editor. Clipboard and voice support vary between apps and speech providers. Tests on real hardware remain important, particularly on Android 16 with navigation overlays. This is a development build, not a Play Store release.

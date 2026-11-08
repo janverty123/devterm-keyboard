@@ -1,4 +1,4 @@
-# Android device test checklist
+# Termora Android device test checklist
 
 Use a **new build** from GitHub Actions. Record phone model, Android version, system navigation mode, and target app when reporting problems.
 
@@ -31,3 +31,14 @@ Use a **new build** from GitHub Actions. Record phone model, Android version, sy
 - [ ] Long-press and keys still work with TalkBack enabled.
 - [ ] Check key visibility at large system font scale.
 - [ ] The app requests no INTERNET permission; neither text nor clipboard is logged.
+
+## v0.3.0 new features
+- [ ] Top toolbar contains Shift and Mic (scroll horizontally to see them).
+- [ ] Tap Ctrl then Shift then V in an editor supporting Ctrl+Shift+V.
+- [ ] Copy text into Android clipboard, focus Termux, tap Paste: text appears in the terminal **without automatically executing**.
+- [ ] Press and hold a letter: circular popup appears above key and vanishes on release.
+- [ ] On password inputs, keypress bubble is suppressed.
+- [ ] Turn previews off in Termora settings, reopen keyboard and confirm disabled.
+- [ ] Grant microphone permission in Termora setup, tap Mic, speak a test phrase and verify text inserts (no automatic Enter).
+- [ ] Deny microphone permission and verify keyboard typing still works.
+- [ ] Confirm icon/name are Termora in launcher and keyboard settings.
