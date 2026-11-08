@@ -555,7 +555,7 @@ class DeveloperKeyboardService : InputMethodService() {
             clipChildren = true
             clipToPadding = true
             isFillViewport = false
-            addView(inner, ScrollView.LayoutParams(
+            addView(inner, FrameLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
             ))
         }
