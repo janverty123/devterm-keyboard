@@ -1,36 +1,52 @@
 # DevTerm Keyboard
 
-An offline, native Android software keyboard for developers, Termux, SSH, and code editors. Written in Kotlin with Android InputMethodService.
+A lightweight **Android developer keyboard** built with Kotlin and `InputMethodService`. Designed for Termux, SSH terminals, editors, and regular Android text fields, without needing a laptop or root access.
 
-**Status: developer preview.** Source code is provided but the APK and terminal compatibility have not been verified on hardware.
+## v0.2 — Adaptive keyboard
 
-## Included
-- ABC: QWERTY, number row, Shift, Backspace, Space and Enter.
-- SYM: programming punctuation, braces, brackets, pipes, slash, backslash, tilde and more.
-- NAV: Esc, Tab, arrows, Home, End, Insert, Delete, Page Up/Down, Ctrl shortcuts.
-- FN: F1-F12, Caps Lock, Num Lock, Scroll Lock, Pause, Print Screen and Menu.
-- Always-visible scrollable terminal strip: Esc, Tab, Ctrl, Alt, arrows, Fn.
-- One-shot Ctrl, Alt, Shift and Meta modifiers.
-- No Internet permission, clipboard history or keyboard logging.
+- Compact Gboard-inspired rounded keys, ripple effects and subtle press animations.
+- Resizes keyboard key height for short portrait and landscape screens.
+- Reserves a navigation-bar safe area on Android 15/16 (including an OEM fallback), so the Android keyboard switcher does not overlap the final row.
+- Letter, symbol, navigation, and F1–F12 layouts.
+- A horizontally scrollable top developer toolbar with Esc, Tab, Ctrl, Alt, **Copy**, **Paste**, arrows, Fn and Meta.
+- **Hold Space** (or tap 🌐) to open Android's **Change keyboard** picker; no extra permissions required.
+- **Tap Shift** to capitalize the next letter, **double-tap or hold Shift** for Caps Lock, tap Shift to unlock. Android text fields requesting sentence capitalization are respected.
+- Long-press Backspace and arrow keys to repeat actions.
+- Copy, Cut, Paste and Select All through the target application's InputConnection. Clipboard fallback is used for Paste and copying selected text when supported.
+- Optional light, dark or follow-system theme, compact keyboard height and haptics — configured from the DevTerm app.
+- No `INTERNET` permission, telemetry, clipboard history, or logging.
 
-## Build
-Install Android Studio with JDK 17 and SDK Platform 35. Open this project and run **Build > Build APK(s)**.
+## Get the APK
 
-You can instead build in the cloud using **Actions > Android debug APK > Run workflow** in GitHub. On a successful run, find the debug APK in **Artifacts**. Initial CI success is not yet confirmed.
+Visit [GitHub Actions](https://github.com/janverty123/devterm-keyboard/actions), open a **successful** Android debug APK workflow run, download the `devterm-keyboard-debug` artifact, unzip it and install `app-debug.apk` on your phone. GitHub stores artifacts for a limited period. The APK is a developer build, not a Play Store release.
 
-## Activate
-Install the APK, open DevTerm Keyboard, tap **Enable keyboard**, enable it in Android settings, tap **Choose keyboard**, and select it. Then open Termux or a text editor.
+**For upgrades, install over the existing app rather than uninstalling it, if Android allows it.** Because GitHub Actions uses a runner's debug signing key, its signature may change between runs. If Android rejects an upgrade due to a signature mismatch, uninstall the old debug build first, then install the new one and re-enable the keyboard. A stable signing key is planned for releases.
 
-## Important limitations
-This is a system keyboard, not a terminal emulator. Android apps decide whether to accept hardware-like Ctrl/Esc/Fn key events. Ordinary text input uses InputConnection.commitText; special keys use sendKeyEvent. Device testing is required.
+## Enable
 
-All keyboards can potentially read what you type, so only install code you trust and review the source before entering sensitive data.
+1. Open DevTerm after installing.
+2. Tap **Enable DevTerm Keyboard** and turn it on in Android's settings.
+3. Tap **Choose active keyboard** and select DevTerm.
+4. Open Termux or your editor, and type. Use `?123`, `Nav` and `Fn` for extra keys.
 
-## Project structure
-- app/src/main/java/com/oasan/devtermkeyboard/ contains the Android service, key models, layers, event sender and setup screen
-- docs/PLAN.md contains the development plan
-- docs/GITHUB-TERMUX.md contains a Termux publishing guide
-- .github/workflows/android.yml builds a debug APK
+## Build from source
+
+Android Studio with JDK 17, SDK Platform 35, Gradle 8.11.1 (or CI's GitHub-hosted runner) is supported:
+
+```sh
+gradle assembleDebug
+```
+
+See [docs/PLAN.md](docs/PLAN.md) for the roadmap and [docs/TESTING.md](docs/TESTING.md) for on-device checks.
+
+## Compatibility and caveats
+
+Some apps, including Termux and SSH clients, decide which `KeyEvent` combinations to process. Standard `InputConnection` clipboard actions may not be supported by a terminal session even if they work in editable text fields. Hold Shift to lock uppercase when typing; Fn keys are sent as key events, not special text.
+
+**The GitHub CI build is not a substitute for physical device testing.** Please report the device, Android version, layout mode and target app when a key is not recognized.
+
+Android warns when enabling any third-party keyboard because such software can see typed input. Only install source you trust. The app intentionally does not access the network or keep a history of entered text.
 
 ## License
-No license has been selected. Repository owner should choose one before broad redistribution.
+
+No license has been selected yet. The repository owner should choose one before broad redistribution.

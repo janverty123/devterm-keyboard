@@ -1,43 +1,24 @@
-# DevTerm Keyboard: development plan
+# DevTerm Keyboard — development roadmap
 
-## Goal
-Ship a lightweight offline Android system keyboard for Termux, mobile coding, and SSH sessions.
+## Milestone 0.2 (implemented in source)
+- [x] Keyboard input method with four layouts and Android setup UI
+- [x] Adaptive row heights and navigation-bar inset padding for Android 15/16
+- [x] Gboard-inspired rounded keys, light/dark themes, ripple and key-press animations
+- [x] Permanent scrollable developer toolbar; copy/paste/cut/select all actions
+- [x] Long-press Space / 🌐 keyboard picker
+- [x] Shift one-shot, double-tap/hold Caps Lock and auto-sentence caps in regular text editors
+- [x] Long-press repeat for Backspace and cursor arrows
+- [x] Configurable compact size and optional haptics
+- [x] Offline with no INTERNET permission
+- [ ] Test layout on actual Android 16 device with gesture and 3-button navigation
+- [ ] Test Termux, Vim, Nano, tmux, SSH and common code editors
 
-## Architecture
-1. MainActivity: onboarding and Android keyboard settings.
-2. DeveloperKeyboardService: renders keys, handles layers and one-shot modifier state.
-3. KeyLayouts: declarative ABC, SYM, NAV and FN layouts.
-4. KeyEventSender: commitText for ordinary text and sendKeyEvent for special/terminal keys.
-5. GitHub Actions: debug APK build workflow.
+## Upcoming
+1. Device-based bug fixes for OEM navigation-bar inset differences, orientation changes and small screens.
+2. User-editable key strip with drag/reorder, repeat speed, and keyboard height slider.
+3. Clipboard toolbar previews without persistent history, terminal-specific selection handling.
+4. Accessibility review, automated UI/emulator checks, stable signing and release APKs.
+5. Long-press symbol alternates, swipe cursor movement and improved predictive capitalization if desired.
 
-## Phase 1 — MVP
-- [x] Android InputMethodService declaration
-- [x] Four layouts and terminal key strip
-- [x] Esc, Tab, Ctrl, Alt, Shift, arrows, Home, End, Page Up/Down, F1-F12
-- [x] Programming symbols, backspace, enter and Meta
-- [x] One-shot modifiers and Ctrl shortcuts
-- [x] Offline/privacy design
-- [x] GitHub Actions debug APK workflow
-- [ ] Verify Android SDK 35 CI compilation
-- [ ] Test with Termux on real Android hardware
-
-## Phase 2 — Usability
-- [ ] Key repeat on hold
-- [ ] Shift double-tap lock, Ctrl lock and state indicators
-- [ ] Portrait/landscape layouts, haptics and custom key height
-- [ ] Custom themes and rearrangeable shortcuts
-
-## Phase 3 — Advanced
-- [ ] Custom macros/snippets
-- [ ] Reliable Vim, Nano, tmux and SSH compatibility test matrix
-- [ ] Touchpad cursor motion and advanced Meta/Super combinations
-- [ ] Accessibility and performance improvements
-
-## Phase 4 — Distribution
-- [ ] Automated emulator and unit tests
-- [ ] Signed release APK and GitHub Releases
-- [ ] Android-version regression tests
-- [ ] Privacy and reproducible build documentation
-
-## Acceptance
-Install on Android 8+, enable as a system keyboard, type shell commands in Termux, check Escape, Tab, arrows, function keys, and verify Ctrl+C interruption and Ctrl+D EOF. No network permission or logging.
+## Manual acceptance checks
+See TESTING.md. A successful CI compile alone does not prove correct behavior in the user's specific terminal emulator.

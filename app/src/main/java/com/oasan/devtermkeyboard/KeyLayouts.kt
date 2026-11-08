@@ -2,126 +2,119 @@ package com.oasan.devtermkeyboard
 
 import android.view.KeyEvent
 
-/** All key definitions live here so layouts can be edited without touching IME logic. */
-object KeyLayouts {
-    private fun t(label: String, output: String = label, weight: Float = 1f) =
+/** Declarative key definitions shared by every phone and screen orientation. */
+internal object KeyLayouts {
+    private fun text(label: String, output: String = label, weight: Float = 1f) =
         KeySpec(label, KeyAction.Text(output), weight)
-
-    private fun k(label: String, code: Int, weight: Float = 1f) =
+    private fun key(label: String, code: Int, weight: Float = 1f) =
         KeySpec(label, KeyAction.Hardware(code), weight)
+    private fun modifier(label: String, modifier: KeyboardModifier) =
+        KeySpec(label, KeyAction.Modifier(modifier), 1.15f)
+    private fun layer(label: String, layer: KeyboardLayer) =
+        KeySpec(label, KeyAction.Layer(layer), 1.25f)
+    private fun shortcut(label: String, code: Int) =
+        KeySpec(label, KeyAction.Shortcut(code,
+            KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON), 1.1f)
 
-    private fun m(label: String, modifier: KeyboardModifier) =
-        KeySpec(label, KeyAction.Modifier(modifier), 1.35f)
-
-    private fun l(label: String, layer: KeyboardLayer) =
-        KeySpec(label, KeyAction.Layer(layer), 1.45f)
-
-    private fun hotkey(label: String, code: Int) =
-        KeySpec(label, KeyAction.Shortcut(code, KeyEvent.META_CTRL_ON or KeyEvent.META_CTRL_LEFT_ON), 1.25f)
-
-    fun utilityRow(): List<KeySpec> = listOf(
-        k("ESC", KeyEvent.KEYCODE_ESCAPE),
-        k("TAB", KeyEvent.KEYCODE_TAB),
-        m("CTRL", KeyboardModifier.CTRL),
-        m("ALT", KeyboardModifier.ALT),
-        k("←", KeyEvent.KEYCODE_DPAD_LEFT),
-        k("↓", KeyEvent.KEYCODE_DPAD_DOWN),
-        k("↑", KeyEvent.KEYCODE_DPAD_UP),
-        k("→", KeyEvent.KEYCODE_DPAD_RIGHT),
-        l("FN", KeyboardLayer.FUNCTIONS)
+    /** Scrollable toolbar. Copy / Paste are among its first six items. */
+    fun toolbar() = listOf(
+        key("Esc", KeyEvent.KEYCODE_ESCAPE),
+        key("Tab", KeyEvent.KEYCODE_TAB),
+        modifier("Ctrl", KeyboardModifier.CTRL),
+        modifier("Alt", KeyboardModifier.ALT),
+        KeySpec("Copy", KeyAction.Copy, 1.25f),
+        KeySpec("Paste", KeyAction.Paste, 1.25f),
+        key("←", KeyEvent.KEYCODE_DPAD_LEFT),
+        key("→", KeyEvent.KEYCODE_DPAD_RIGHT),
+        key("↑", KeyEvent.KEYCODE_DPAD_UP),
+        key("↓", KeyEvent.KEYCODE_DPAD_DOWN),
+        layer("Fn", KeyboardLayer.FUNCTIONS),
+        modifier("Meta", KeyboardModifier.META)
     )
 
     fun rows(layer: KeyboardLayer): List<List<KeySpec>> = when (layer) {
         KeyboardLayer.LETTERS -> listOf(
-            "1234567890".map { t(it.toString()) },
-            "qwertyuiop".map { t(it.toString()) },
-            "asdfghjkl".map { t(it.toString()) },
-            listOf(m("SHIFT", KeyboardModifier.SHIFT)) +
-                "zxcvbnm".map { t(it.toString()) } +
-                k("⌫", KeyEvent.KEYCODE_DEL, 1.5f),
+            "1234567890".map { text(it.toString()) },
+            "qwertyuiop".map { text(it.toString()) },
+            "asdfghjkl".map { text(it.toString()) },
+            listOf(KeySpec("⇧", KeyAction.Shift, 1.55f, "Shift / hold for Caps Lock")) +
+                "zxcvbnm".map { text(it.toString()) } +
+                key("⌫", KeyEvent.KEYCODE_DEL, 1.55f),
             listOf(
-                l("SYM", KeyboardLayer.SYMBOLS),
-                t(","), t("/"),
-                t("SPACE", " ", 4.5f),
-                t("."),
-                k("↵", KeyEvent.KEYCODE_ENTER, 1.5f),
-                l("NAV", KeyboardLayer.NAVIGATION)
+                layer("?123", KeyboardLayer.SYMBOLS),
+                text(","),
+                KeySpec("🌐", KeyAction.Picker, 0.85f, "Change keyboard"),
+                text("English (US)", " ", 4.1f),
+                text("."),
+                key("↵", KeyEvent.KEYCODE_ENTER, 1.55f),
+                layer("Nav", KeyboardLayer.NAVIGATION)
             )
         )
         KeyboardLayer.SYMBOLS -> listOf(
-            listOf("!", "@", "#", "$", "%", "^", "&", "*", "(", ")").map { t(it) },
-            listOf("[", "]", "{", "}", "<", ">", "\\", "|", "/", "?").map { t(it) },
-            listOf("-", "_", "=", "+", ";", ":", "'", "\"", "`", "~").map { t(it) },
+            listOf("!", "@", "#", "$", "%", "^", "&", "*", "(", ")").map { text(it) },
+            listOf("[", "]", "{", "}", "<", ">", "\\", "|", "/", "?").map { text(it) },
+            listOf("-", "_", "=", "+", ";", ":", "'", "\"", "`", "~").map { text(it) },
+            listOf("//", "->", "=>", "&&", "||", "!=", "==", "::", "%%").map { text(it) },
             listOf(
-                l("ABC", KeyboardLayer.LETTERS),
-                m("SHIFT", KeyboardModifier.SHIFT),
-                t("SPACE", " ", 4.5f),
-                k("⌫", KeyEvent.KEYCODE_DEL, 1.5f),
-                k("↵", KeyEvent.KEYCODE_ENTER, 1.5f),
-                l("NAV", KeyboardLayer.NAVIGATION)
+                layer("ABC", KeyboardLayer.LETTERS),
+                KeySpec("⇧", KeyAction.Shift, 1.15f, "Shift / Caps Lock"),
+                KeySpec("🌐", KeyAction.Picker, 0.85f, "Change keyboard"),
+                text("space", " ", 4.1f),
+                key("⌫", KeyEvent.KEYCODE_DEL, 1.5f),
+                key("↵", KeyEvent.KEYCODE_ENTER, 1.5f),
+                layer("Nav", KeyboardLayer.NAVIGATION)
             )
         )
         KeyboardLayer.NAVIGATION -> listOf(
             listOf(
-                k("ESC", KeyEvent.KEYCODE_ESCAPE),
-                k("TAB", KeyEvent.KEYCODE_TAB),
-                k("HOME", KeyEvent.KEYCODE_MOVE_HOME),
-                k("END", KeyEvent.KEYCODE_MOVE_END),
-                k("PGUP", KeyEvent.KEYCODE_PAGE_UP),
-                k("PGDN", KeyEvent.KEYCODE_PAGE_DOWN)
+                key("Esc", KeyEvent.KEYCODE_ESCAPE), key("Tab", KeyEvent.KEYCODE_TAB),
+                key("Home", KeyEvent.KEYCODE_MOVE_HOME), key("End", KeyEvent.KEYCODE_MOVE_END),
+                key("PgUp", KeyEvent.KEYCODE_PAGE_UP), key("PgDn", KeyEvent.KEYCODE_PAGE_DOWN)
             ),
             listOf(
-                k("INS", KeyEvent.KEYCODE_INSERT),
-                k("DEL", KeyEvent.KEYCODE_FORWARD_DEL),
-                k("←", KeyEvent.KEYCODE_DPAD_LEFT),
-                k("↑", KeyEvent.KEYCODE_DPAD_UP),
-                k("↓", KeyEvent.KEYCODE_DPAD_DOWN),
-                k("→", KeyEvent.KEYCODE_DPAD_RIGHT)
+                key("Ins", KeyEvent.KEYCODE_INSERT), key("Del", KeyEvent.KEYCODE_FORWARD_DEL),
+                key("←", KeyEvent.KEYCODE_DPAD_LEFT), key("↑", KeyEvent.KEYCODE_DPAD_UP),
+                key("↓", KeyEvent.KEYCODE_DPAD_DOWN), key("→", KeyEvent.KEYCODE_DPAD_RIGHT)
             ),
             listOf(
-                hotkey("^C", KeyEvent.KEYCODE_C),
-                hotkey("^D", KeyEvent.KEYCODE_D),
-                hotkey("^Z", KeyEvent.KEYCODE_Z),
-                hotkey("^L", KeyEvent.KEYCODE_L),
-                hotkey("^A", KeyEvent.KEYCODE_A),
-                hotkey("^E", KeyEvent.KEYCODE_E)
+                KeySpec("Copy", KeyAction.Copy), KeySpec("Paste", KeyAction.Paste),
+                KeySpec("Cut", KeyAction.Cut), KeySpec("All", KeyAction.SelectAll),
+                shortcut("Undo", KeyEvent.KEYCODE_Z),
+                shortcut("Redo", KeyEvent.KEYCODE_Y)
             ),
             listOf(
-                hotkey("^K", KeyEvent.KEYCODE_K),
-                hotkey("^U", KeyEvent.KEYCODE_U),
-                hotkey("^W", KeyEvent.KEYCODE_W),
-                hotkey("^R", KeyEvent.KEYCODE_R),
-                hotkey("^P", KeyEvent.KEYCODE_P),
-                hotkey("^N", KeyEvent.KEYCODE_N)
+                shortcut("^C", KeyEvent.KEYCODE_C), shortcut("^D", KeyEvent.KEYCODE_D),
+                shortcut("^Z", KeyEvent.KEYCODE_Z), shortcut("^L", KeyEvent.KEYCODE_L),
+                shortcut("^A", KeyEvent.KEYCODE_A), shortcut("^E", KeyEvent.KEYCODE_E)
             ),
             listOf(
-                l("ABC", KeyboardLayer.LETTERS),
-                l("SYM", KeyboardLayer.SYMBOLS),
-                m("SHIFT", KeyboardModifier.SHIFT),
-                t("SPACE", " ", 3.5f),
-                k("⌫", KeyEvent.KEYCODE_DEL, 1.4f),
-                k("↵", KeyEvent.KEYCODE_ENTER, 1.4f)
+                layer("ABC", KeyboardLayer.LETTERS), layer("?123", KeyboardLayer.SYMBOLS),
+                layer("Fn", KeyboardLayer.FUNCTIONS),
+                KeySpec("🌐", KeyAction.Picker, 0.85f, "Change keyboard"),
+                text("space", " ", 3.6f),
+                key("⌫", KeyEvent.KEYCODE_DEL, 1.25f),
+                key("↵", KeyEvent.KEYCODE_ENTER, 1.25f)
             )
         )
         KeyboardLayer.FUNCTIONS -> listOf(
-            (1..4).map { k("F$it", KeyEvent.KEYCODE_F1 + it - 1) },
-            (5..8).map { k("F$it", KeyEvent.KEYCODE_F1 + it - 1) },
-            (9..12).map { k("F$it", KeyEvent.KEYCODE_F1 + it - 1) },
+            (1..4).map { key("F$it", KeyEvent.KEYCODE_F1 + it - 1) },
+            (5..8).map { key("F$it", KeyEvent.KEYCODE_F1 + it - 1) },
+            (9..12).map { key("F$it", KeyEvent.KEYCODE_F1 + it - 1) },
             listOf(
-                k("CAPS", KeyEvent.KEYCODE_CAPS_LOCK),
-                k("NUM", KeyEvent.KEYCODE_NUM_LOCK),
-                k("SCRLK", KeyEvent.KEYCODE_SCROLL_LOCK),
-                k("PAUSE", KeyEvent.KEYCODE_BREAK),
-                k("PRTSC", KeyEvent.KEYCODE_SYSRQ),
-                k("MENU", KeyEvent.KEYCODE_MENU)
+                key("Caps", KeyEvent.KEYCODE_CAPS_LOCK),
+                key("Num", KeyEvent.KEYCODE_NUM_LOCK),
+                key("ScrLk", KeyEvent.KEYCODE_SCROLL_LOCK),
+                key("Pause", KeyEvent.KEYCODE_BREAK),
+                key("PrtSc", KeyEvent.KEYCODE_SYSRQ),
+                key("Menu", KeyEvent.KEYCODE_MENU)
             ),
             listOf(
-                l("ABC", KeyboardLayer.LETTERS),
-                l("SYM", KeyboardLayer.SYMBOLS),
-                l("NAV", KeyboardLayer.NAVIGATION),
-                m("META", KeyboardModifier.META),
-                k("TAB", KeyEvent.KEYCODE_TAB),
-                k("↵", KeyEvent.KEYCODE_ENTER)
+                layer("ABC", KeyboardLayer.LETTERS), layer("?123", KeyboardLayer.SYMBOLS),
+                layer("Nav", KeyboardLayer.NAVIGATION),
+                modifier("Meta", KeyboardModifier.META),
+                KeySpec("🌐", KeyAction.Picker, 0.85f, "Change keyboard"),
+                text("space", " ", 2.3f),
+                key("↵", KeyEvent.KEYCODE_ENTER)
             )
         )
     }
