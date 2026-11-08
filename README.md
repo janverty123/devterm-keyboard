@@ -18,9 +18,11 @@ A lightweight **Android developer keyboard** built with Kotlin and `InputMethodS
 
 ## Get the APK
 
-Visit [GitHub Actions](https://github.com/janverty123/devterm-keyboard/actions), open a **successful** Android debug APK workflow run, download the `devterm-keyboard-debug` artifact, unzip it and install `app-debug.apk` on your phone. GitHub stores artifacts for a limited period. The APK is a developer build, not a Play Store release.
+**Direct Android installation:** open the [latest DevTerm Keyboard release](https://github.com/janverty123/devterm-keyboard/releases/latest) or [all GitHub Releases](https://github.com/janverty123/devterm-keyboard/releases), expand **Assets**, and tap the `.apk` file. There is no need to download or extract the GitHub Actions ZIP.
 
-**For upgrades, install over the existing app rather than uninstalling it, if Android allows it.** Because GitHub Actions uses a runner's debug signing key, its signature may change between runs. If Android rejects an upgrade due to a signature mismatch, uninstall the old debug build first, then install the new one and re-enable the keyboard. A stable signing key is planned for releases.
+Release assets are automatically published for newly versioned, successful `main`-branch APK builds. The release workflow reads `versionName` from `app/build.gradle.kts`, skips an already published version, and attaches a direct-install APK plus its SHA-256 checksum.
+
+**Signing:** these are prerelease debug APKs. The v0.2.0 release reuses the verified v0.2.0 CI build to avoid a signature change from that build. Future debug builds may have different signatures until a permanent signing key is set up. If Android reports an app signature mismatch, uninstall the previously installed debug version, then install the new version and enable the keyboard again.
 
 ## Enable
 

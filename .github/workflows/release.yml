@@ -1,0 +1,93 @@
+name: Publish installable APK release
+
+on:
+  workflow_run:
+    workflows: ["Android debug APK"]
+    types: [completed]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  actions: read
+
+concurrency:
+  group: devterm-keyboard-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push' &&
+       github.event.workflow_run.head_branch == 'main' &&
+       github.event.workflow_run.head_repository.full_name == github.repository)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out matching source
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - name: Identify version and source build
+        id: identify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT_RUN: ${{ github.event.workflow_run.id }}
+          EVENT_SHA: ${{ github.event.workflow_run.head_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -n1)
+          test -n "$VERSION" || { echo 'Missing versionName' >&2; exit 1; }
+          TAG="v${VERSION}"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          TARGET_SHA="${EVENT_SHA:-$GITHUB_SHA}"
+          echo "target_sha=$TARGET_SHA" >> "$GITHUB_OUTPUT"
+          if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo 'exists=true' >> "$GITHUB_OUTPUT"
+            echo "Release $TAG already exists; skipping duplicate publication."
+            exit 0
+          fi
+          echo 'exists=false' >> "$GITHUB_OUTPUT"
+          # Reuse the previously verified v0.2.0 build for consistent upgrades
+          # from that exact debug APK. Future versions use their own CI build.
+          if [[ "$TAG" == 'v0.2.0' ]]; then
+            BUILD_RUN_ID=42501911398
+          elif [[ -n "$EVENT_RUN" ]]; then
+            BUILD_RUN_ID="$EVENT_RUN"
+          else
+            BUILD_RUN_ID=$(gh run list --repo "$GITHUB_REPOSITORY" --workflow android.yml --branch main --status success --limit 1 --json databaseId --jq '.[0].databaseId')
+          fi
+          test -n "$BUILD_RUN_ID" || { echo 'No successful APK build found' >&2; exit 1; }
+          echo "build_run_id=$BUILD_RUN_ID" >> "$GITHUB_OUTPUT"
+      - name: Download tested APK artifact
+        if: steps.identify.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN_ID: ${{ steps.identify.outputs.build_run_id }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p artifact
+          gh run download "$BUILD_RUN_ID" --repo "$GITHUB_REPOSITORY" --name devterm-keyboard-debug --dir artifact
+          test -s artifact/app-debug.apk
+      - name: Publish direct-install APK to GitHub Releases
+        if: steps.identify.outputs.exists == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.identify.outputs.tag }}
+          TARGET_SHA: ${{ steps.identify.outputs.target_sha }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          ASSET="DevTerm-Keyboard-${TAG}.apk"
+          cp artifact/app-debug.apk "$ASSET"
+          sha256sum "$ASSET" > "${ASSET}.sha256"
+          gh release create "$TAG" "$ASSET" "${ASSET}.sha256" \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_SHA" \
+            --title "DevTerm Keyboard ${TAG}" \
+            --notes-file docs/RELEASE_NOTES.md \
+            --prerelease
+          echo "### Direct download" >> "$GITHUB_STEP_SUMMARY"
+          echo "https://github.com/${GITHUB_REPOSITORY}/releases/download/${TAG}/${ASSET}" >> "$GITHUB_STEP_SUMMARY"
