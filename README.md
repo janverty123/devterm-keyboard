@@ -2,6 +2,10 @@
 
 Keylix is a native Kotlin Android system keyboard with a **Standard** mode for everyday writing and a **Dev** mode for Termux, SSH, command-line tools, and code editing. It is not Gboard and does not use Gboard's proprietary source or assets.
 
+## v0.5.1 — Menu and emoji scrolling refinement
+
+The tools menu now has a fixed, scrollable viewport and includes Dev navigation and Function keys. The emoji picker uses a bounded scrolling region, responsive 8/10-column grids and an expanded **More** category of Unicode emojis. Android's emoji font supplies the colorful glyph artwork; newer emoji depend on device font support.
+
 ## v0.5 — Gboard-inspired tools menu and emoji picker
 
 The keyboard uses familiar mobile-keyboard interaction patterns drawn from Gboard's toolbar and tools grid, while all control icons and the app logo are original Android VectorDrawable graphics. No button uses an emoji character as a substitute for an icon.

@@ -460,7 +460,7 @@ class DeveloperKeyboardService : InputMethodService() {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
         }
-        EmojiCatalog.groups.forEachIndexed { index, group ->
+        EmojiCatalog.displayedGroups().forEachIndexed { index, group ->
             val category = iconControl(
                 categoryIcon(group.name),
                 group.name + " emoji",
@@ -481,8 +481,9 @@ class DeveloperKeyboardService : InputMethodService() {
             ViewGroup.LayoutParams.MATCH_PARENT, dp(44)
         ))
 
-        val selectedGroup = EmojiCatalog.groups[
-            emojiGroup.coerceIn(0, EmojiCatalog.groups.lastIndex)
+        val allGroups = EmojiCatalog.displayedGroups()
+        val selectedGroup = allGroups[
+            emojiGroup.coerceIn(0, allGroups.lastIndex)
         ]
         val emojis = if (selectedGroup.name == "Recent") {
             recentEmoji.toList()
@@ -603,6 +604,7 @@ class DeveloperKeyboardService : InputMethodService() {
         "Objects" -> R.drawable.ic_kx_objects
         "Symbols" -> R.drawable.ic_kx_symbols
         "Flags" -> R.drawable.ic_kx_flags
+        "More" -> R.drawable.ic_kx_symbols
         else -> R.drawable.ic_kx_emoji
     }
 
