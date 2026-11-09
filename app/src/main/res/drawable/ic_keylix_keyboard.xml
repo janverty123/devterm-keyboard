@@ -1,23 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <vector xmlns:android="http://schemas.android.com/apk/res/android"
-    android:width="108dp" android:height="108dp"
-    android:viewportWidth="108" android:viewportHeight="108">
-    <!-- Minimal keyboard with a mint terminal key: original Keylix mark -->
-    <path android:fillColor="#00000000" android:strokeColor="#F9FCFF"
-        android:strokeWidth="7" android:strokeLineCap="round"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Original Keylix mark: mint keyboard on a deep navy launcher background. -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#6DE3C8"
+        android:strokeWidth="5"
         android:strokeLineJoin="round"
-        android:pathData="M23,29 L85,29 Q92,29 92,36 L92,73 Q92,80 85,80 L23,80 Q16,80 16,73 L16,36 Q16,29 23,29 Z" />
-    <path android:fillColor="#F9FCFF" android:pathData="M27,39 L38,39 L38,50 L27,50 Z"/>
-    <path android:fillColor="#F9FCFF" android:pathData="M43,39 L54,39 L54,50 L43,50 Z"/>
-    <path android:fillColor="#F9FCFF" android:pathData="M59,39 L70,39 L70,50 L59,50 Z"/>
-    <path android:fillColor="#F9FCFF" android:pathData="M75,39 L82,39 L82,50 L75,50 Z"/>
-    <path android:fillColor="#F9FCFF" android:pathData="M27,56 L38,56 L38,67 L27,67 Z"/>
-    <path android:fillColor="#F9FCFF" android:pathData="M43,56 L54,56 L54,67 L43,67 Z"/>
-    <path android:fillColor="#36D9B9" android:pathData="M59,55 L83,55 Q86,55 86,58 L86,67 Q86,70 83,70 L59,70 Q56,70 56,67 L56,58 Q56,55 59,55 Z"/>
-    <path android:fillColor="#10243D" android:strokeColor="#10243D"
-        android:strokeLineCap="round" android:strokeLineJoin="round"
-        android:strokeWidth="2.5" android:pathData="M66,59 L72,62.5 L66,66"/>
-    <path android:fillColor="#10243D" android:strokeColor="#10243D"
-        android:strokeWidth="2.5" android:pathData="M73,67 L80,67"/>
-    <path android:fillColor="#F9FCFF" android:pathData="M26,72 L52,72 L52,75 L26,75 Z"/>
+        android:strokeLineCap="round"
+        android:pathData="M21,30 L87,30 Q93,30 93,36 L93,75 Q93,81 87,81 L21,81 Q15,81 15,75 L15,36 Q15,30 21,30 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M24,39 L34,39 L34,48 L24,48 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M39,39 L49,39 L49,48 L39,48 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M54,39 L64,39 L64,48 L54,48 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M69,39 L83,39 L83,48 L69,48 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M24,54 L34,54 L34,63 L24,63 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M39,54 L49,54 L49,63 L39,63 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M54,54 L64,54 L64,63 L54,63 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M69,54 L83,54 L83,63 L69,63 Z"/>
+    <path android:fillColor="#58D9B8" android:pathData="M24,68 L58,68 L58,74 L24,74 Z"/>
+    <!-- A small terminal key, clearly readable even at launcher-icon size. -->
+    <path android:fillColor="#A6FFE5" android:pathData="M64,66 L84,66 Q86,66 86,69 L86,74 Q86,76 84,76 L64,76 Q62,76 62,74 L62,69 Q62,66 64,66 Z"/>
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#0C2734"
+        android:strokeWidth="2"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M67,68.5 L71,71 L67,73.5 M73,74 L81,74"/>
 </vector>

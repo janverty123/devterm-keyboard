@@ -35,11 +35,11 @@ internal object KeyLayouts {
     private fun footer(symbols: Boolean = false): List<KeySpec> = listOf(
         l(if (symbols) "ABC" else "?123",
             if (symbols) KeyboardLayer.LETTERS else KeyboardLayer.SYMBOLS),
-        KeySpec("Emoji", KeyAction.Layer(KeyboardLayer.EMOJI), 1.05f, "Emojis"),
-        t(",", ",", 0.85f),
+        t(",", ",", 0.8f),
+        KeySpec("Emoji", KeyAction.Layer(KeyboardLayer.EMOJI), 1.0f, "Emojis"),
         t("English", " ", 4.3f),
-        t(".", ".", 0.85f),
-        k("↵", KeyEvent.KEYCODE_ENTER, 1.5f)
+        t(".", ".", 0.8f),
+        k("↵", KeyEvent.KEYCODE_ENTER, 1.55f)
     )
 
     fun rows(mode: KeyboardMode, layer: KeyboardLayer): List<List<KeySpec>> = when (layer) {

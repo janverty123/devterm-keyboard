@@ -10,6 +10,10 @@ import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
+import android.graphics.drawable.LayerDrawable
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
 import android.inputmethodservice.InputMethodService
 import android.os.Build
 import android.os.Bundle
@@ -51,6 +55,35 @@ class DeveloperKeyboardService : InputMethodService() {
     private val modifiers = mutableSetOf<KeyboardModifier>()
     private val keyViews = mutableListOf<Pair<TextView, KeySpec>>()
     private var suggestionBar: LinearLayout? = null
+    private var voiceStatusText: TextView? = null
+    private var voiceHeaderActive = false
+    private val inlineVoice by lazy {
+        InlineVoiceController(this,
+            onState = { state, partial ->
+                val activeNow = state != InlineVoiceController.State.IDLE
+                if (voiceHeaderActive != activeNow) refreshHeader()
+                if (activeNow) {
+                    voiceStatusText?.text = when (state) {
+                        InlineVoiceController.State.STARTING -> "Starting…"
+                        InlineVoiceController.State.LISTENING -> if (partial.isNullOrBlank())
+                            "Listening…" else "Listening…  " + partial.take(36)
+                        InlineVoiceController.State.PROCESSING -> "Processing…"
+                        InlineVoiceController.State.IDLE -> ""
+                    }
+                }
+            },
+            onFinalText = { text ->
+                if (currentInputConnection != null &&
+                    currentInputEditorInfo?.packageName == voiceTarget) {
+                    finishComposition(false)
+                    currentInputConnection?.commitText(text, 1)
+                }
+            },
+            onFailure = { message ->
+                Toast.makeText(this, message, Toast.LENGTH_LONG).show()
+            }
+        )
+    }
     private var emojiGroup = 0
     private val recentEmoji = mutableListOf<String>()
     private var toolsOpen = false
@@ -111,6 +144,7 @@ class DeveloperKeyboardService : InputMethodService() {
 
     override fun onStartInputView(info: EditorInfo?, restarting: Boolean) {
         super.onStartInputView(info, restarting)
+        inlineVoice.stop()
         // Do not commit the previous field's composition into a newly focused app.
         composing.setLength(0)
         mode = KeyboardPreferences.mode(this)
@@ -126,7 +160,6 @@ class DeveloperKeyboardService : InputMethodService() {
         modifiers.clear()
         updateAutoCaps()
         render()
-        deliverPendingSpeech()
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -138,6 +171,7 @@ class DeveloperKeyboardService : InputMethodService() {
     }
 
     override fun onFinishInput() {
+        inlineVoice.stop()
         clearRepeat()
         preview.dismiss()
         finishComposition(false)
@@ -148,6 +182,7 @@ class DeveloperKeyboardService : InputMethodService() {
     }
 
     override fun onDestroy() {
+        inlineVoice.stop()
         clearRepeat()
         preview.dismiss()
         root = null
@@ -269,6 +304,43 @@ class DeveloperKeyboardService : InputMethodService() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(2), dp(2), dp(2), dp(3))
         }
+        voiceHeaderActive = inlineVoice.active
+        voiceStatusText = null
+        if (inlineVoice.active) {
+            line.addView(iconControl(
+                R.drawable.ic_kx_back, "Stop voice typing", palette.key
+            ) {
+                inlineVoice.stop()
+            }, LinearLayout.LayoutParams(dp(43), dp(40)).apply {
+                rightMargin = dp(3)
+            })
+            voiceStatusText = TextView(this).apply {
+                text = when (inlineVoice.state) {
+                    InlineVoiceController.State.STARTING -> "Starting…"
+                    InlineVoiceController.State.LISTENING -> "Listening…"
+                    InlineVoiceController.State.PROCESSING -> "Processing…"
+                    InlineVoiceController.State.IDLE -> ""
+                }
+                textSize = 14f
+                typeface = Typeface.DEFAULT_BOLD
+                gravity = Gravity.CENTER
+                isSingleLine = true
+                ellipsize = TextUtils.TruncateAt.END
+                setTextColor(palette.foreground)
+                contentDescription = "Voice typing status"
+            }
+            line.addView(voiceStatusText, LinearLayout.LayoutParams(0, dp(40), 1f))
+            line.addView(iconControl(
+                R.drawable.ic_kx_chevron, "Stop listening", palette.auxiliary
+            ) { inlineVoice.stop() }, LinearLayout.LayoutParams(dp(38), dp(40)))
+            line.addView(iconControl(
+                R.drawable.ic_kx_mic, "Microphone active. Tap to stop",
+                palette.selected
+            ) { inlineVoice.stop() }, LinearLayout.LayoutParams(dp(44), dp(40)).apply {
+                leftMargin = dp(4)
+            })
+            return line
+        }
         val menuIcon = if (toolsOpen || customizingTools) R.drawable.ic_kx_back else R.drawable.ic_kx_tools
         line.addView(iconControl(menuIcon,
             if (toolsOpen || customizingTools) "Back to tools" else "Keyboard tools",
@@ -326,6 +398,13 @@ class DeveloperKeyboardService : InputMethodService() {
         ) { dispatch(KeyAction.Voice) },
             LinearLayout.LayoutParams(dp(42), dp(40)).apply { leftMargin = dp(2) })
         return line
+    }
+
+    private fun refreshHeader() {
+        val panel = root ?: return
+        if (panel.childCount == 0) return
+        panel.removeViewAt(0)
+        panel.addView(makeHeader(), 0)
     }
 
     private fun iconControl(icon: Int, description: String, surface: Int,
@@ -593,7 +672,15 @@ class DeveloperKeyboardService : InputMethodService() {
         val container = suggestionBar ?: return
         container.removeAllViews()
         val options = WordSuggestions.suggest(composing.toString(), previousWord)
-        options.take(3).forEach { word ->
+        options.take(3).forEachIndexed { index, word ->
+            if (index > 0) {
+                container.addView(View(this).apply {
+                    setBackgroundColor((palette.secondary and 0x00FFFFFF) or 0x44000000)
+                    contentDescription = null
+                }, LinearLayout.LayoutParams(dp(1), dp(20)).apply {
+                    setMargins(dp(2), 0, dp(2), 0)
+                })
+            }
             val cell = TextView(this).apply {
                 text = word
                 isSingleLine = true
@@ -789,8 +876,8 @@ class DeveloperKeyboardService : InputMethodService() {
             ))
         }
         val viewportHeight = if (emojiSearchMode) dp(90) else dp(
-            ((if (mode == KeyboardMode.DEVELOPER) 3 else 2) * keyHeight() - 24)
-                .coerceAtLeast(65)
+            ((if (mode == KeyboardMode.DEVELOPER) 4 else 3) * keyHeight() - 20)
+                .coerceAtLeast(92)
         )
         panel.addView(viewport, LinearLayout.LayoutParams(
             ViewGroup.LayoutParams.MATCH_PARENT, viewportHeight
@@ -991,18 +1078,28 @@ class DeveloperKeyboardService : InputMethodService() {
         else -> null
     }
 
+    /**
+     * Center VectorDrawable keys using a background LayerDrawable.
+     * TextView top compound drawables shifted Emoji, Backspace and Enter upward.
+     */
     private fun paint(view: TextView, spec: KeySpec) {
         val color = keyColor(spec)
         val active = color == palette.selected
         val icon = keyIcon(spec)
+        view.setCompoundDrawables(null, null, null, null)
+        val surface = rounded(color, 10)
         if (icon != null) {
             view.text = ""
             val glyph = getDrawable(icon)?.mutate()
             glyph?.setTint(if (active) palette.accentText else palette.foreground)
-            glyph?.setBounds(0, 0, dp(23), dp(23))
-            view.setCompoundDrawables(null, glyph, null, null)
+            if (glyph != null) {
+                view.background = LayerDrawable(arrayOf(surface, glyph)).apply {
+                    setLayerGravity(1, Gravity.CENTER)
+                    setLayerWidth(1, dp(24))
+                    setLayerHeight(1, dp(24))
+                }
+            } else view.background = surface
         } else {
-            view.setCompoundDrawables(null, null, null, null)
             view.text = when {
                 spec.action === KeyAction.Shift -> "Shift"
                 spec.action is KeyAction.Text && spec.action.value.length == 1 &&
@@ -1010,9 +1107,9 @@ class DeveloperKeyboardService : InputMethodService() {
                     spec.label.uppercase(Locale.ROOT)
                 else -> spec.label
             }
+            view.background = surface
         }
         view.setTextColor(if (active) palette.accentText else palette.foreground)
-        view.background = rounded(color, 7)
         view.elevation = dp(1).toFloat()
     }
 
@@ -1027,7 +1124,11 @@ class DeveloperKeyboardService : InputMethodService() {
 
     /** Solid accent flash: no expanding ripple, no big pop-up animations. */
     private fun flash(v: View, spec: KeySpec, down: Boolean) {
-        val drawable = v.background as? GradientDrawable ?: return
+        val drawable = when (val background = v.background) {
+            is GradientDrawable -> background
+            is LayerDrawable -> background.getDrawable(0) as? GradientDrawable
+            else -> null
+        } ?: return
         val start = if (down) keyColor(spec) else palette.selected
         val end = if (down) palette.selected else keyColor(spec)
         val animation = ValueAnimator.ofArgb(start, end)
@@ -1262,43 +1363,36 @@ class DeveloperKeyboardService : InputMethodService() {
     }
 
     private fun startVoice() {
-        val variation = (currentInputEditorInfo?.inputType ?: 0) and
-            InputType.TYPE_MASK_VARIATION
+        val type = currentInputEditorInfo?.inputType ?: 0
+        val variation = type and InputType.TYPE_MASK_VARIATION
         if (variation in setOf(
             InputType.TYPE_TEXT_VARIATION_PASSWORD,
             InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,
             InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,
             InputType.TYPE_NUMBER_VARIATION_PASSWORD
         )) return
-        voiceTarget = currentInputEditorInfo?.packageName
-        val receiver = object : ResultReceiver(Handler(Looper.getMainLooper())) {
-            override fun onReceiveResult(resultCode: Int, resultData: Bundle?) {
-                if (resultCode != android.app.Activity.RESULT_OK) return
-                val spoken = resultData?.getString("spoken_text")?.trim().orEmpty()
-                if (spoken.isEmpty()) return
-                if (currentInputConnection != null &&
-                    currentInputEditorInfo?.packageName == voiceTarget
-                ) {
-                    finishComposition(false)
-                    currentInputConnection?.commitText(spoken, 1)
-                } else {
-                    pendingSpeech = spoken
-                }
-            }
-        }
-        startActivity(Intent(this, VoiceRecognitionActivity::class.java).apply {
-            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            putExtra("result_receiver", receiver)
-        })
-    }
-
-    private fun deliverPendingSpeech() {
-        val text = pendingSpeech ?: return
-        if (currentInputEditorInfo?.packageName != voiceTarget) {
-            pendingSpeech = null
+        if (inlineVoice.active) {
+            inlineVoice.stop()
             return
         }
-        if (currentInputConnection?.commitText(text, 1) == true) pendingSpeech = null
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            Toast.makeText(this, "Grant microphone access once to use inline dictation.",
+                Toast.LENGTH_LONG).show()
+            startActivity(Intent(this, MainActivity::class.java).apply {
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                putExtra("request_microphone", true)
+            })
+            return
+        }
+        voiceTarget = currentInputEditorInfo?.packageName
+        val wasMenuVisible = toolsOpen || customizingTools
+        toolsOpen = false
+        customizingTools = false
+        finishComposition(false)
+        if (wasMenuVisible) render()
+        inlineVoice.start()
     }
 
     private fun startRepeat(view: View, key: KeyAction.Hardware) {

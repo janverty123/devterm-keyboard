@@ -1,20 +1,21 @@
-# Keylix v0.6.0 — Searchable emojis and customizable toolbar
+# Keylix v0.7.0 — Inline voice typing and visual polish
 
-The Gboard-inspired interface continues to use original Android VectorDrawable controls and independently implemented UI. No proprietary Google code, artwork or data files are copied.
+Based on user-provided Gboard screenshots, Keylix now takes an independently implemented approach to Gboard's voice/status toolbar and conventional key spacing.
 
-### New in this release
+### Changes
 
-- **Search emoji names:** Tap the search field at the top of Emoji, then type using the built-in search keyboard. Matches use Unicode character names and curated English keyword aliases; tapping a result inserts the emoji into your app.
-- **Personalized toolbar:** Four-square Tools menu → Customize. Tap a slot, then select an available action; long-press and drag also supported. Two pinned quick actions, stored privately on device. Reset and Done controls included.
-- **Gboard-style cleaner tools area:** A scrollable, clipped tools panel keeps Dev Navigation and Function Keys accessible without adding extra permanent key rows.
-- **Expanded emoji coverage:** Includes more Unicode sequences and skin tone options, under the More category. Device font support determines which ones appear correctly.
-- **Scrollable emoji viewport:** The categories, search field and bottom action row are not children of the scrollable emoji grid, preventing content from drawing on top of the controls.
-- Original vector icons for microphone, clipboard, emoji toggle, customize, backspace and Enter; no placeholder emoji icons in buttons.
+- **Inline speech recognition:** The microphone triggers Android's installed SpeechRecognizer from within the keyboard itself. No external voice-typing window. In the keyboard toolbar, see **Starting…**, **Listening…**, and **Processing…**, plus Back/Stop/Microphone native icons. Text is inserted at the original cursor once after recognition, without automatically sending Enter.
+- **Voice permission:** The first microphone tap can show Keylix's setup page and Android's one-time RECORD_AUDIO permission dialog. Later dictation stays in the keyboard. Android may require Google Speech Services or another installed recognizer, and some services process audio online.
+- **Centered symbols:** Backspace, Enter, Emoji and keyboard-switcher actions draw their own vector icons centered in the key background, fixing the previous off-center appearance.
+- **Balanced bottom row:** ?123, comma, Emoji, Space, period, rightmost Enter.
+- **Prediction dividers:** Thin separators between three evenly spaced word suggestions.
+- **Updated app icon:** All-mint keyboard silhouette and subtle terminal prompt on a deep navy launcher background.
+- Retains Standard/Dev modes, terminal modifiers, customizable toolbar, emoji categories, and emoji keyword search.
 
-### Installation
+### Install
 
-Choose the `Keylix-v0.6.0.apk` file from **Assets**. Install it, then enable Keylix in Android's keyboard settings. This is a debug-signed prerelease; uninstall an older differently signed build if Android reports a signature mismatch, then re-enable the keyboard.
+Under GitHub Releases **Assets**, choose `Keylix-v0.7.0.apk` (not Source code ZIP). This is a debug-signed prerelease: an APK with a different debug signing certificate may require you to uninstall the previous version and re-enable Keylix.
 
-### Limitations
+### Device verification
 
-Prediction is a small offline English dictionary, not Gboard's proprietary model. Emoji search is keyword-based; there is no GIF or sticker search. Dictation uses Android's installed speech provider, which may use the internet. The keyboard itself requests no Internet permission and does not log text. Device verification is still needed.
+Even if GitHub Actions compiles the Android APK and tests pass, we still need to test real microphone capture, speech-provider availability, visual alignment, and system navigation insets on your Android phone. Keylix has no INTERNET permission, but external speech services may send audio online.

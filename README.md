@@ -2,6 +2,18 @@
 
 Keylix is a native Kotlin Android system keyboard with a **Standard** mode for everyday writing and a **Dev** mode for Termux, SSH, command-line tools, and code editing. It is not Gboard and does not use Gboard's proprietary source or assets.
 
+## v0.7.0 — Inline voice, polished key alignment and new launcher icon
+
+- **Dictation stays on the keyboard:** Tap Keylix's microphone to start Android SpeechRecognizer directly inside the IME, instead of launching a voice-typing Activity. The header shows **Starting…**, **Listening…**, or **Processing…**, plus native Back, stop and mic icons. Partial recognition is previewed; final speech is committed once without pressing Enter. Tap the mic or Back to cancel.
+- **First-use microphone permission:** Keylix requests RECORD_AUDIO through the setup screen. This system permission dialog is the only separate view; normal dictation keeps the current text field and keyboard visible. If no recognizer is installed, the keyboard explains how to enable one. Some Android speech services may need network access or a downloaded language model.
+- **Centered vector key icons:** Emoji, Backspace, Enter and keyboard-switcher drawables are centered by a LayerDrawable, not a top-aligned compound text drawable.
+- **Gboard-inspired bottom row:** ?123, comma, Emoji, Space, period, Enter — with cleaner, consistently rounded keycaps.
+- **Predictive separators:** Thin dividers between the three word suggestions, with equal widths.
+- **New launcher brand:** A crisp **green keyboard** on a **dark navy** background (editable native vector asset), replacing the previous white-outline icon.
+- **No proprietary Gboard assets:** Android system speech APIs and independent VectorDrawables are used.
+
+The APK is a prerelease. A successful build does not prove real-device microphone behavior; test on Android 16 with Google Speech Services installed and microphone permission granted.
+
 ## v0.6.0 — Custom toolbar and searchable emoji
 
 - **Emoji search:** Open Emoji, tap the magnifying-glass search field, then type a keyword using Keylix's compact search keyboard. Emoji results are filtered by searchable Unicode names and common English aliases such as "heart", "dog", "party", "fire" and "philippines". Search does not launch another Android keyboard and therefore cannot cover the picker.

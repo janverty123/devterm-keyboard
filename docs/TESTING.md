@@ -65,3 +65,16 @@
 - [ ] Tap a result; emoji enters the host editor without adding search-query letters.
 - [ ] Scroll a large emoji category to the bottom; categories/search/ABC buttons remain visible.
 - [ ] Check latest emoji fallbacks on an older Android device and in landscape.
+
+## v0.7.0 inline voice and alignment
+- [ ] Open a regular text field and tap the microphone in the Keylix toolbar.
+- [ ] On first use, grant Android microphone permission. Return to the field and tap Mic again.
+- [ ] Verify Keylix remains on screen with "Starting…" then "Listening…" rather than opening a speech Activity.
+- [ ] Speak "hello world"; see a partial preview where provided and final text inserted exactly once, without a newline or Enter.
+- [ ] Stop by pressing Back or Mic while recording; microphone indicator switches off.
+- [ ] Stop recording by changing the focused text field or closing the keyboard.
+- [ ] If Google speech services is unavailable, see a useful error rather than an unexplained blank screen.
+- [ ] Backspace, Emoji and Enter vector icons are visually centered within their keycaps.
+- [ ] The typing footer is ?123 / comma / Emoji / Space / period / Enter.
+- [ ] Suggestions have two subtle separators and do not overflow on small screens.
+- [ ] Verify the launcher and setup logo show a mint keyboard on navy background.

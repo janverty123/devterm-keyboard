@@ -1,6 +1,8 @@
 package com.oasan.devtermkeyboard
 
 import android.app.Activity
+import android.Manifest
+import android.content.pm.PackageManager
 import android.content.ComponentName
 import android.content.Intent
 import android.content.res.ColorStateList
@@ -34,6 +36,8 @@ class MainActivity : Activity() {
     private val selected = Color.rgb(215, 240, 241)
     private var enabledStatus: TextView? = null
     private var selectedStatus: TextView? = null
+    private var microphoneStatus: TextView? = null
+    private val microphoneRequestCode = 3047
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -184,19 +188,37 @@ class MainActivity : Activity() {
             KeyboardPreferences.setHaptics(this, it)
         }
 
-        heading(body, "Voice and emoji")
+        heading(body, "Voice typing")
         val voice = card(body)
-        voice.addView(label("🎙  Mic is located beside the mode switch.", 14f, ink, true))
+        voice.addView(label("Speak without leaving the keyboard", 14.5f, ink, true))
         voice.addView(label(
-            "Tapping it opens your installed Android speech recognizer. " +
-            "If an external provider is unavailable, Keylix offers a fallback with microphone permission. " +
-            "A speech provider may use internet processing.",
+            "Tap the microphone on the keyboard. The toolbar will show Listening… " +
+            "while your installed Android speech service recognizes your voice. " +
+            "Press Back or the microphone to stop.",
             12.5f, hint
+        ).apply { setPadding(0, dp(8), 0, dp(8)) })
+        microphoneStatus = label("Checking microphone permission…", 13f, hint)
+            .also(voice::addView)
+        val microphoneActions = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        action(microphoneActions, "Allow microphone", true) {
+            askMicrophonePermission()
+        }
+        voice.addView(microphoneActions)
+        voice.addView(label(
+            "Voice recognition may use Google's or another installed Android provider. " +
+            "That provider may send audio online; Keylix itself does not save audio.",
+            12f, hint
         ).apply { setPadding(0, dp(8), 0, 0) })
-        voice.addView(label(
-            "☺  Use the emoji button on the bottom row. Standard and Dev have the same emoji picker.",
+
+        heading(body, "Emojis")
+        val emojiInfo = card(body)
+        emojiInfo.addView(label(
+            "Open the emoji key from the bottom row. Search emoji names or browse " +
+            "categories without leaving the keyboard.",
             12.5f, hint
-        ).apply { setPadding(0, dp(10), 0, 0) })
+        ))
 
         heading(body, "Try typing")
         val test = card(body)
@@ -237,6 +259,10 @@ class MainActivity : Activity() {
             insets
         }
         setContentView(scroll)
+        if (intent.getBooleanExtra("request_microphone", false)) {
+            intent.removeExtra("request_microphone")
+            scroll.post { askMicrophonePermission() }
+        }
         if (intent.getStringExtra("open_section") == "themes") {
             scroll.post { scroll.smoothScrollTo(0, themeCard.top) }
         }
@@ -251,6 +277,32 @@ class MainActivity : Activity() {
         selectedStatus?.text = if (Settings.Secure.getString(contentResolver,
             Settings.Secure.DEFAULT_INPUT_METHOD) == id)
             "✓ Keylix is active" else "Select Keylix to start typing."
+        microphoneStatus?.text = if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        ) "✓ Microphone is enabled for inline voice typing."
+        else "Microphone access is optional. Tap Allow microphone to enable it."
+    }
+
+    private fun askMicrophonePermission() {
+        if (checkSelfPermission(Manifest.permission.RECORD_AUDIO) ==
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            microphoneStatus?.text = "✓ Microphone is already enabled."
+            return
+        }
+        requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), microphoneRequestCode)
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int, permissions: Array<out String>, grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == microphoneRequestCode) {
+            microphoneStatus?.text = if (grantResults.firstOrNull() ==
+                PackageManager.PERMISSION_GRANTED
+            ) "✓ Microphone enabled. Return to any text field and tap the mic."
+            else "Microphone access was denied. You can enable it later in Android settings."
+        }
     }
 
     private fun heading(parent: LinearLayout, value: String) {
