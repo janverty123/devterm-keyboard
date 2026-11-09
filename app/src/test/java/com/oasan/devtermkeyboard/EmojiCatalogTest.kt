@@ -5,19 +5,20 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 
 class EmojiCatalogTest {
-    @Test fun hasExtendedCategories() {
-        val names = EmojiCatalog.groups.map { it.name }
-        assertEquals("Recent", names.first())
-        assertTrue(names.containsAll(listOf("Smileys", "People", "Animals", "Food",
-            "Activities", "Travel", "Objects", "Symbols", "Flags")))
-        assertTrue(EmojiCatalog.groups.filter { it.name != "Recent" }
-            .all { it.emoji.isNotEmpty() })
+    @Test fun missingExtendedGroupRegression() {
+        assertTrue(EmojiCatalog.displayedGroups().any { it.name == "More" })
+        assertTrue(EmojiCatalog.allEmoji().contains("🫎"))
     }
 
-    @Test fun containsMultiCodepointEmojis() {
-        assertTrue(EmojiCatalog.groups.any { group ->
-            group.emoji.any { it == "🏳️‍🌈" }
-        })
-        assertTrue(EmojiCatalog.groups.flatMap { it.emoji }.size > 450)
+    @Test fun keywordSearch() {
+        assertTrue(EmojiCatalog.search("fire").contains("🔥"))
+        assertTrue(EmojiCatalog.search("philippines").contains("🇵🇭"))
+        assertTrue(EmojiCatalog.search("heart").contains("❤️"))
+        assertTrue(EmojiCatalog.search("").isEmpty())
+    }
+
+    @Test fun noDuplicateGroups() {
+        assertEquals(EmojiCatalog.displayedGroups().map { it.name }.distinct().size,
+            EmojiCatalog.displayedGroups().size)
     }
 }

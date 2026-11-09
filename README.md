@@ -2,6 +2,17 @@
 
 Keylix is a native Kotlin Android system keyboard with a **Standard** mode for everyday writing and a **Dev** mode for Termux, SSH, command-line tools, and code editing. It is not Gboard and does not use Gboard's proprietary source or assets.
 
+## v0.6.0 — Custom toolbar and searchable emoji
+
+- **Emoji search:** Open Emoji, tap the magnifying-glass search field, then type a keyword using Keylix's compact search keyboard. Emoji results are filtered by searchable Unicode names and common English aliases such as "heart", "dog", "party", "fire" and "philippines". Search does not launch another Android keyboard and therefore cannot cover the picker.
+- **Toolbar customization:** Open the four-square Tools menu → **Customize**. Choose either of the two pinned slots and tap an available shortcut to assign it, or long-press and drag a shortcut onto a slot. Use Reset to restore the defaults (Paste and Emoji). The selections are stored locally.
+- **Fixed navigation and function access:** Dev Navigation and Function Keys are available through the tools menu as well as Dev mode.
+- **Emoji containment:** The emoji category strip and bottom action row remain outside a clipped, fixed-height scrolling viewport; the search input and its results are separate from the host text field.
+- **More Unicode emoji:** Extended category with newer symbols, skin tones and sequences when supported by the Android system emoji font.
+- **Control icons:** All toolbar actions use native Android VectorDrawable icons, including a new Customize icon. Colorful emoji are rendered only in the emoji picker itself.
+
+The previous v0.5.1 source did not build due to a missing catalog method. v0.6.0 includes that method and runs GitHub Actions unit tests plus APK compilation. Physical Android 16 device testing is still required for drag-and-drop, gesture navigation and emoji clipping.
+
 ## v0.5.1 — Menu and emoji scrolling refinement
 
 The tools menu now has a fixed, scrollable viewport and includes Dev navigation and Function keys. The emoji picker uses a bounded scrolling region, responsive 8/10-column grids and an expanded **More** category of Unicode emojis. Android's emoji font supplies the colorful glyph artwork; newer emoji depend on device font support.

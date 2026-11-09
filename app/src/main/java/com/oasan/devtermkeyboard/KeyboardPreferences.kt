@@ -15,6 +15,25 @@ internal object KeyboardPreferences {
     fun setMode(ctx: Context, mode: KeyboardMode) =
         store(ctx).edit().putString("mode", mode.name).apply()
 
+    /** Exactly two distinct pinned actions. Stored locally, never uploaded. */
+    fun toolbarSlots(ctx: Context): List<String> {
+        val stored = store(ctx).getString("toolbar_slots", null)?.split(",").orEmpty()
+        val valid = stored.filter { value -> ToolbarShortcuts.items.any { it.id == value } }
+            .distinct()
+        return if (valid.size == 2) valid else ToolbarShortcuts.defaults
+    }
+    fun setToolbarSlot(ctx: Context, slot: Int, value: String) {
+        if (slot !in 0..1 || ToolbarShortcuts.items.none { it.id == value }) return
+        val current = toolbarSlots(ctx).toMutableList()
+        val from = current.indexOf(value)
+        if (from >= 0 && from != slot) current[from] = current[slot]
+        current[slot] = value
+        store(ctx).edit().putString("toolbar_slots", current.joinToString(",")).apply()
+    }
+    fun resetToolbar(ctx: Context) {
+        store(ctx).edit().remove("toolbar_slots").apply()
+    }
+
     fun theme(ctx: Context): String = store(ctx).getString("theme", "system") ?: "system"
     fun setTheme(ctx: Context, value: String) {
         if (value in THEMES.map { it.first }) store(ctx).edit().putString("theme", value).apply()

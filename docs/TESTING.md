@@ -52,3 +52,16 @@
 - [ ] Confirm Recents records tapped emojis in the same session, and Flags contains national flags.
 - [ ] Try narrow portrait and landscape widths. Emoji grid remains inside its bounds.
 - [ ] Switch to Dev mode and check the independent terminal toolbar can scroll sideways without covering the emoji panel.
+
+## v0.6.0 toolbar customization and emoji search
+- [ ] Open Tools using the four-square vector icon; select Customize.
+- [ ] Tap slot 1 and assign Symbols; confirm the toolbar icon changes.
+- [ ] Long-press a tool and drag it onto slot 2; confirm the new action appears.
+- [ ] Tap Reset; default Paste and Emoji return.
+- [ ] Switch between Standard/Dev; pinned toolbar settings persist after app restart.
+- [ ] Open emoji search; type "fire" and confirm 🔥 is in the results.
+- [ ] Type "heart" and "philippines" and confirm matching emojis.
+- [ ] Press Backspace in emoji search; only the query changes, not the host editor.
+- [ ] Tap a result; emoji enters the host editor without adding search-query letters.
+- [ ] Scroll a large emoji category to the bottom; categories/search/ABC buttons remain visible.
+- [ ] Check latest emoji fallbacks on an older Android device and in landscape.

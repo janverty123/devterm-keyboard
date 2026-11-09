@@ -207,7 +207,7 @@ class MainActivity : Activity() {
             setPadding(dp(10), dp(10), dp(10), dp(10))
             background = round(canvas, 11)
         })
-        body.addView(label("Keylix v0.4.0  •  Developer preview", 12f, hint).apply {
+        body.addView(label("Keylix v0.6.0  •  Developer preview", 12f, hint).apply {
             gravity = Gravity.CENTER
             setPadding(0, dp(22), 0, dp(14))
         })

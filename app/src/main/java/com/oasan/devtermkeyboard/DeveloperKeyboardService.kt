@@ -54,6 +54,10 @@ class DeveloperKeyboardService : InputMethodService() {
     private var emojiGroup = 0
     private val recentEmoji = mutableListOf<String>()
     private var toolsOpen = false
+    private var customizingTools = false
+    private var selectedShortcutSlot = 0
+    private var emojiSearchMode = false
+    private var emojiSearchQuery = ""
     private var oneShotShift = false
     private var capsLock = false
     private var autoCaps = false
@@ -113,6 +117,9 @@ class DeveloperKeyboardService : InputMethodService() {
         palette = KeyboardPalette.forContext(this)
         layer = KeyboardLayer.LETTERS
         toolsOpen = false
+        customizingTools = false
+        emojiSearchMode = false
+        emojiSearchQuery = ""
         previousWord = ""
         oneShotShift = false
         capsLock = false
@@ -197,6 +204,10 @@ class DeveloperKeyboardService : InputMethodService() {
         panel.setBackgroundColor(palette.background)
         suggestionBar = null
         panel.addView(makeHeader())
+        if (customizingTools) {
+            renderShortcutEditor(panel)
+            return
+        }
         if (toolsOpen) {
             renderToolsMenu(panel)
             return
@@ -258,10 +269,10 @@ class DeveloperKeyboardService : InputMethodService() {
             gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(2), dp(2), dp(2), dp(3))
         }
-        val menuIcon = if (toolsOpen) R.drawable.ic_kx_back else R.drawable.ic_kx_tools
+        val menuIcon = if (toolsOpen || customizingTools) R.drawable.ic_kx_back else R.drawable.ic_kx_tools
         line.addView(iconControl(menuIcon,
-            if (toolsOpen) "Close tools menu" else "Keyboard tools",
-            if (toolsOpen) palette.selected else palette.auxiliary
+            if (toolsOpen || customizingTools) "Back to tools" else "Keyboard tools",
+            if (toolsOpen || customizingTools) palette.selected else palette.auxiliary
         ) {
             dispatch(KeyAction.Tools)
         }, LinearLayout.LayoutParams(dp(43), dp(40)).apply {
@@ -300,13 +311,12 @@ class DeveloperKeyboardService : InputMethodService() {
                     contentDescription = "Keyboard mode: $text"
                 }
                 quick.addView(modeTag, LinearLayout.LayoutParams(0, dp(40), 1f))
-                quick.addView(iconControl(R.drawable.ic_kx_clipboard, "Paste clipboard",
-                    palette.background) { dispatch(KeyAction.Paste) },
-                    LinearLayout.LayoutParams(dp(40), dp(40)))
-                quick.addView(iconControl(R.drawable.ic_kx_emoji, "Open emoji keyboard",
-                    palette.background) {
-                    dispatch(KeyAction.Layer(KeyboardLayer.EMOJI))
-                }, LinearLayout.LayoutParams(dp(40), dp(40)))
+                KeyboardPreferences.toolbarSlots(this@DeveloperKeyboardService).forEach { id ->
+                    val shortcut = ToolbarShortcuts.lookup(id)
+                    quick.addView(iconControl(shortcut.icon, shortcut.title, palette.background) {
+                        dispatch(shortcut.action)
+                    }, LinearLayout.LayoutParams(dp(40), dp(40)))
+                }
             }
             line.addView(quick, LinearLayout.LayoutParams(0, dp(40), 1f))
         }
@@ -368,6 +378,12 @@ class DeveloperKeyboardService : InputMethodService() {
             },
             Tool(R.drawable.ic_kx_symbols, "Symbols") {
                 dispatch(KeyAction.Layer(KeyboardLayer.SYMBOLS))
+            },
+            Tool(R.drawable.ic_kx_customize, "Customize") {
+                customizingTools = true
+                toolsOpen = false
+                selectedShortcutSlot = 0
+                render()
             }
         )
         val grid = GridLayout(this).apply {
@@ -417,6 +433,162 @@ class DeveloperKeyboardService : InputMethodService() {
         ))
     }
 
+    /** Gboard-inspired pinning with both drag/drop and an accessible tap-to-assign path. */
+    private fun renderShortcutEditor(panel: LinearLayout) {
+        val viewport = ScrollView(this).apply {
+            isVerticalScrollBarEnabled = false
+            overScrollMode = View.OVER_SCROLL_NEVER
+            clipChildren = true
+            clipToPadding = true
+        }
+        val content = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            setPadding(dp(7), dp(4), dp(7), dp(12))
+        }
+        content.addView(TextView(this).apply {
+            text = "Customize toolbar"
+            textSize = 16f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(palette.foreground)
+            setPadding(dp(8), dp(6), 0, dp(6))
+        })
+        content.addView(TextView(this).apply {
+            text = "Tap a slot and then a tool, or hold and drag a tool into a slot."
+            textSize = 12f
+            setTextColor(palette.secondary)
+            setPadding(dp(8), 0, dp(8), dp(12))
+        })
+        val slots = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER
+        }
+        KeyboardPreferences.toolbarSlots(this).forEachIndexed { index, id ->
+            val shortcut = ToolbarShortcuts.lookup(id)
+            val cell = shortcutTile(shortcut, index == selectedShortcutSlot).apply {
+                contentDescription = "Pinned shortcut " + (index + 1) + ": " + shortcut.title
+                setOnClickListener {
+                    selectedShortcutSlot = index
+                    render()
+                }
+                setOnDragListener { _, event ->
+                    when (event.action) {
+                        android.view.DragEvent.ACTION_DRAG_STARTED ->
+                            event.localState is String
+                        android.view.DragEvent.ACTION_DROP -> {
+                            val dragged = event.localState as? String
+                            if (dragged != null) {
+                                KeyboardPreferences.setToolbarSlot(
+                                    this@DeveloperKeyboardService, index, dragged
+                                )
+                                selectedShortcutSlot = index
+                                render()
+                                true
+                            } else false
+                        }
+                        else -> true
+                    }
+                }
+            }
+            slots.addView(cell, LinearLayout.LayoutParams(
+                0, dp(70), 1f
+            ).apply { setMargins(dp(4), 0, dp(4), dp(8)) })
+        }
+        content.addView(slots)
+        content.addView(TextView(this).apply {
+            text = "Available shortcuts"
+            textSize = 13f
+            typeface = Typeface.DEFAULT_BOLD
+            setTextColor(palette.foreground)
+            setPadding(dp(8), dp(8), 0, dp(7))
+        })
+        val choices = GridLayout(this).apply {
+            columnCount = 2
+            clipChildren = true
+            clipToPadding = true
+        }
+        ToolbarShortcuts.items.forEachIndexed { index, shortcut ->
+            val cell = shortcutTile(shortcut, false).apply {
+                contentDescription = "Assign " + shortcut.title
+                setOnClickListener {
+                    KeyboardPreferences.setToolbarSlot(
+                        this@DeveloperKeyboardService, selectedShortcutSlot, shortcut.id
+                    )
+                    selectedShortcutSlot = (selectedShortcutSlot + 1) % 2
+                    render()
+                }
+                setOnLongClickListener {
+                    val clip = ClipData.newPlainText("shortcut", shortcut.id)
+                    startDragAndDrop(clip, View.DragShadowBuilder(this), shortcut.id, 0)
+                    true
+                }
+            }
+            choices.addView(cell, GridLayout.LayoutParams().apply {
+                rowSpec = GridLayout.spec(index / 2)
+                columnSpec = GridLayout.spec(index % 2, 1f)
+                width = 0
+                height = dp(59)
+                setMargins(dp(4), dp(4), dp(4), dp(4))
+            })
+        }
+        content.addView(choices)
+        val footer = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }
+        fun footerButton(label: String, click: () -> Unit) = TextView(this).apply {
+            text = label
+            textSize = 13f
+            gravity = Gravity.CENTER
+            setTextColor(palette.foreground)
+            background = rounded(palette.auxiliary, 12)
+            setOnClickListener { click() }
+        }
+        footer.addView(footerButton("Reset") {
+            KeyboardPreferences.resetToolbar(this)
+            render()
+        }, LinearLayout.LayoutParams(0, dp(42), 1f).apply {
+            setMargins(dp(4), 0, dp(4), 0)
+        })
+        footer.addView(footerButton("Done") {
+            customizingTools = false
+            toolsOpen = false
+            render()
+        }, LinearLayout.LayoutParams(0, dp(42), 1f).apply {
+            setMargins(dp(4), 0, dp(4), 0)
+        })
+        content.addView(footer)
+        viewport.addView(content)
+        panel.addView(viewport, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT,
+            dp(keyHeight() * (if (mode == KeyboardMode.DEVELOPER) 5 else 4) + 9)
+        ))
+    }
+
+    private fun shortcutTile(shortcut: ToolbarShortcut, active: Boolean): LinearLayout {
+        val tile = LinearLayout(this).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(10), dp(4), dp(8), dp(4))
+            background = rounded(if (active) palette.selected else palette.auxiliary, 13)
+            isClickable = true
+            isFocusable = true
+        }
+        tile.addView(ImageView(this).apply {
+            setImageResource(shortcut.icon)
+            imageTintList = ColorStateList.valueOf(
+                if (active) palette.accentText else palette.foreground
+            )
+            contentDescription = null
+        }, LinearLayout.LayoutParams(dp(24), dp(24)).apply {
+            rightMargin = dp(8)
+        })
+        tile.addView(TextView(this).apply {
+            text = shortcut.title
+            textSize = 12f
+            setTextColor(if (active) palette.accentText else palette.foreground)
+            isSingleLine = true
+            ellipsize = TextUtils.TruncateAt.END
+        }, LinearLayout.LayoutParams(0, dp(34), 1f))
+        return tile
+    }
+
     private fun updateSuggestions() {
         val container = suggestionBar ?: return
         container.removeAllViews()
@@ -448,83 +620,135 @@ class DeveloperKeyboardService : InputMethodService() {
     }
 
     /** Sticky category bar + clipped scroll region + sticky bottom key row. */
+    /** Dedicated emoji picker. Search uses our own keys so no second IME can overlap it. */
     private fun renderEmoji(panel: LinearLayout) {
-        val categoryStrip = HorizontalScrollView(this).apply {
-            isHorizontalScrollBarEnabled = false
-            isFillViewport = false
-            overScrollMode = View.OVER_SCROLL_NEVER
-            clipChildren = true
-            clipToPadding = true
-        }
-        val categories = LinearLayout(this).apply {
+        val searchBar = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
             gravity = Gravity.CENTER_VERTICAL
+            background = rounded(palette.auxiliary, 14)
+            clipChildren = true
+            setPadding(dp(4), 0, dp(4), 0)
         }
-        EmojiCatalog.displayedGroups().forEachIndexed { index, group ->
-            val category = iconControl(
-                categoryIcon(group.name),
-                group.name + " emoji",
-                if (emojiGroup == index) palette.selected else palette.background
-            ) {
-                emojiGroup = index
-                render()
+        searchBar.addView(ImageView(this).apply {
+            setImageResource(R.drawable.ic_kx_search)
+            imageTintList = ColorStateList.valueOf(palette.foreground)
+            contentDescription = "Search emojis"
+            setPadding(dp(7), dp(7), dp(7), dp(7))
+        }, LinearLayout.LayoutParams(dp(36), dp(36)))
+        searchBar.addView(TextView(this).apply {
+            text = if (emojiSearchQuery.isEmpty()) "Search emojis" else emojiSearchQuery
+            textSize = 14f
+            isSingleLine = true
+            ellipsize = TextUtils.TruncateAt.START
+            gravity = Gravity.CENTER_VERTICAL
+            setTextColor(if (emojiSearchQuery.isEmpty()) palette.secondary else palette.foreground)
+            setOnClickListener {
+                if (!emojiSearchMode) {
+                    emojiSearchMode = true
+                    render()
+                }
             }
-            category.imageTintList = ColorStateList.valueOf(
-                if (emojiGroup == index) palette.accentText else palette.foreground
-            )
-            categories.addView(category, LinearLayout.LayoutParams(
-                dp(43), dp(39)
-            ).apply { setMargins(dp(3), dp(1), dp(3), dp(1)) })
-        }
-        categoryStrip.addView(categories)
-        panel.addView(categoryStrip, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(44)
-        ))
+            contentDescription = if (emojiSearchMode) "Emoji search query: " + emojiSearchQuery
+                else "Tap to search emojis"
+        }, LinearLayout.LayoutParams(0, dp(38), 1f))
+        searchBar.addView(iconControl(
+            if (emojiSearchMode) R.drawable.ic_kx_back else R.drawable.ic_kx_search,
+            if (emojiSearchMode) "Close emoji search" else "Start emoji search",
+            palette.auxiliary
+        ) {
+            if (emojiSearchMode) {
+                emojiSearchMode = false
+                emojiSearchQuery = ""
+            } else emojiSearchMode = true
+            render()
+        }, LinearLayout.LayoutParams(dp(39), dp(38)))
+        panel.addView(searchBar, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(39)
+        ).apply { setMargins(dp(8), dp(3), dp(8), dp(4)) })
 
-        val allGroups = EmojiCatalog.displayedGroups()
-        val selectedGroup = allGroups[
-            emojiGroup.coerceIn(0, allGroups.lastIndex)
+        if (!emojiSearchMode) {
+            val categories = HorizontalScrollView(this).apply {
+                isHorizontalScrollBarEnabled = false
+                overScrollMode = View.OVER_SCROLL_NEVER
+                clipChildren = true
+                clipToPadding = true
+            }
+            val categoryRow = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            EmojiCatalog.displayedGroups().forEachIndexed { index, group ->
+                val cell = iconControl(categoryIcon(group.name),
+                    group.name + " emojis",
+                    if (emojiGroup == index) palette.selected else palette.background
+                ) {
+                    emojiGroup = index
+                    render()
+                }
+                cell.imageTintList = ColorStateList.valueOf(
+                    if (index == emojiGroup) palette.accentText else palette.foreground
+                )
+                categoryRow.addView(cell, LinearLayout.LayoutParams(
+                    dp(43), dp(39)
+                ).apply { setMargins(dp(3), dp(1), dp(3), dp(1)) })
+            }
+            categories.addView(categoryRow)
+            panel.addView(categories, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(43)
+            ))
+        }
+
+        val selectedGroup = EmojiCatalog.displayedGroups()[
+            emojiGroup.coerceIn(0, EmojiCatalog.displayedGroups().lastIndex)
         ]
-        val emojis = if (selectedGroup.name == "Recent") {
-            recentEmoji.toList()
-        } else selectedGroup.emoji
+        val emojis = if (emojiSearchMode) {
+            if (emojiSearchQuery.isBlank()) {
+                if (recentEmoji.isNotEmpty()) recentEmoji.toList()
+                else EmojiCatalog.groups[1].emoji.take(56)
+            } else EmojiCatalog.search(emojiSearchQuery)
+        } else if (selectedGroup.name == "Recent") recentEmoji.toList()
+        else selectedGroup.emoji
 
         val inner = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
-            clipToPadding = true
             clipChildren = true
+            clipToPadding = true
             setPadding(dp(3), dp(3), dp(3), dp(6))
         }
         inner.addView(TextView(this).apply {
-            text = selectedGroup.name
-            textSize = 12.5f
+            text = if (emojiSearchMode) {
+                if (emojiSearchQuery.isBlank()) "Try searching: heart, dog, fire..." else
+                    "Results for: " + emojiSearchQuery
+            } else selectedGroup.name
+            textSize = 12f
             typeface = Typeface.DEFAULT_BOLD
             setTextColor(palette.secondary)
-            setPadding(dp(9), dp(3), 0, dp(6))
+            setPadding(dp(8), dp(2), 0, dp(4))
         })
         if (emojis.isEmpty()) {
             inner.addView(TextView(this).apply {
-                text = "Your recently used emoji will appear here."
-                textSize = 13f
+                text = if (emojiSearchMode) "No matching emojis" else
+                    "Recently used emojis appear here."
                 gravity = Gravity.CENTER
                 setTextColor(palette.secondary)
+                textSize = 13f
             }, LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(80)
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(70)
             ))
         } else {
-            val columns = 8
+            val columns = if (resources.configuration.orientation ==
+                Configuration.ORIENTATION_LANDSCAPE) 10 else 8
             val grid = GridLayout(this).apply {
                 columnCount = columns
                 clipChildren = true
                 clipToPadding = true
             }
-            val available = resources.displayMetrics.widthPixels - dp(19)
-            val cellWidth = (available / columns - dp(2))
-                .coerceAtLeast(dp(32)).coerceAtMost(dp(57))
+            val cellWidth = ((resources.displayMetrics.widthPixels - dp(24)) /
+                columns - dp(2)).coerceAtLeast(dp(22)).coerceAtMost(dp(57))
             emojis.forEach { character ->
-                val emojiKey = TextView(this).apply {
+                val key = TextView(this).apply {
                     text = character
-                    textSize = 25.5f
+                    textSize = if (columns == 10) 22f else 24f
                     typeface = Typeface.DEFAULT
                     gravity = Gravity.CENTER
                     includeFontPadding = false
@@ -537,59 +761,118 @@ class DeveloperKeyboardService : InputMethodService() {
                         if (recentEmoji.size > 40) recentEmoji.removeAt(recentEmoji.lastIndex)
                     }
                 }
-                grid.addView(emojiKey, GridLayout.LayoutParams().apply {
+                grid.addView(key, GridLayout.LayoutParams().apply {
                     width = cellWidth
                     height = dp(43)
                     setMargins(dp(1), dp(1), dp(1), dp(1))
                 })
             }
-            inner.addView(grid, LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
-            ))
+            inner.addView(grid)
         }
-
-        // Only this fixed-height viewport scrolls. Neither the category toolbar
-        // nor the bottom action keys are children of the ScrollView.
-        val scroller = ScrollView(this).apply {
+        val scroll = ScrollView(this).apply {
             isVerticalScrollBarEnabled = false
             overScrollMode = View.OVER_SCROLL_NEVER
             clipChildren = true
             clipToPadding = true
             isFillViewport = false
             addView(inner, FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
             ))
         }
-        val frame = FrameLayout(this).apply {
+        val viewport = FrameLayout(this).apply {
             clipChildren = true
             clipToPadding = true
-            addView(scroller, FrameLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT
+            addView(scroll, FrameLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.MATCH_PARENT
             ))
         }
-        val emojiRows = if (mode == KeyboardMode.DEVELOPER) 4 else 3
-        panel.addView(frame, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(keyHeight() * emojiRows + 9)
+        val viewportHeight = if (emojiSearchMode) dp(90) else dp(
+            ((if (mode == KeyboardMode.DEVELOPER) 3 else 2) * keyHeight() - 24)
+                .coerceAtLeast(65)
+        )
+        panel.addView(viewport, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, viewportHeight
         ))
 
-        val footer = LinearLayout(this).apply {
+        if (emojiSearchMode) {
+            renderEmojiSearchKeys(panel)
+        } else {
+            val footer = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER_VERTICAL
+            }
+            listOf(
+                KeySpec("ABC", KeyAction.Layer(KeyboardLayer.LETTERS), 1.4f),
+                KeySpec("Space", KeyAction.Text(" "), 4.4f),
+                KeySpec("Delete", KeyAction.Hardware(KeyEvent.KEYCODE_DEL), 1.2f),
+                KeySpec("Enter", KeyAction.Hardware(KeyEvent.KEYCODE_ENTER), 1.3f)
+            ).forEach { spec ->
+                footer.addView(createKey(spec, false), LinearLayout.LayoutParams(
+                    0, dp(keyHeight()), spec.weight
+                ).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) })
+            }
+            panel.addView(footer, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(keyHeight() + 4)
+            ))
+        }
+    }
+
+    /** Query keyboard in the IME itself: no recursive soft-keyboard launch. */
+    private fun renderEmojiSearchKeys(panel: LinearLayout) {
+        val rows = KeyLayouts.rows(KeyboardMode.STANDARD, KeyboardLayer.LETTERS).take(3)
+        rows.forEach { specs ->
+            val row = LinearLayout(this).apply {
+                orientation = LinearLayout.HORIZONTAL
+                gravity = Gravity.CENTER
+            }
+            specs.forEach { spec ->
+                row.addView(createKey(spec, false), LinearLayout.LayoutParams(
+                    0, dp(35), spec.weight
+                ).apply { setMargins(dp(2), dp(1), dp(2), dp(1)) })
+            }
+            panel.addView(row, LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT, dp(37)
+            ))
+        }
+        val last = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL
-            gravity = Gravity.CENTER_VERTICAL
+            gravity = Gravity.CENTER
         }
-        listOf(
-            KeySpec("ABC", KeyAction.Layer(KeyboardLayer.LETTERS), 1.4f),
-            KeySpec("Space", KeyAction.Text(" "), 4.4f),
-            KeySpec("Delete", KeyAction.Hardware(KeyEvent.KEYCODE_DEL), 1.2f,
-                "Delete"),
-            KeySpec("Enter", KeyAction.Hardware(KeyEvent.KEYCODE_ENTER), 1.3f,
-                "Enter")
-        ).forEach { spec ->
-            footer.addView(createKey(spec, false), LinearLayout.LayoutParams(
-                0, dp(keyHeight()), spec.weight
-            ).apply { setMargins(dp(2), dp(2), dp(2), dp(2)) })
+        fun action(label: String, weight: Float, click: () -> Unit) {
+            val key = TextView(this).apply {
+                text = label
+                textSize = 13f
+                gravity = Gravity.CENTER
+                setTextColor(palette.foreground)
+                background = rounded(palette.auxiliary, 9)
+                setOnClickListener { click() }
+            }
+            last.addView(key, LinearLayout.LayoutParams(0, dp(37), weight).apply {
+                setMargins(dp(2), dp(1), dp(2), dp(1))
+            })
         }
-        panel.addView(footer, LinearLayout.LayoutParams(
-            ViewGroup.LayoutParams.MATCH_PARENT, dp(keyHeight() + 4)
+        action("ABC", 1.2f) {
+            emojiSearchMode = false
+            emojiSearchQuery = ""
+            dispatch(KeyAction.Layer(KeyboardLayer.LETTERS))
+        }
+        action("Clear", 1.2f) {
+            emojiSearchQuery = ""
+            render()
+        }
+        action("Space", 3.5f) {
+            emojiSearchQuery = (emojiSearchQuery + " ").take(40)
+            render()
+        }
+        action("Done", 1.2f) {
+            emojiSearchMode = false
+            emojiSearchQuery = ""
+            render()
+        }
+        panel.addView(last, LinearLayout.LayoutParams(
+            ViewGroup.LayoutParams.MATCH_PARENT, dp(39)
         ))
     }
 
@@ -756,10 +1039,40 @@ class DeveloperKeyboardService : InputMethodService() {
     private fun shouldUppercase() = capsLock || oneShotShift || autoCaps
 
     private fun dispatch(a: KeyAction) {
+        // Emoji search keys edit our local query, not the host application's text.
+        if (layer == KeyboardLayer.EMOJI && emojiSearchMode) {
+            when (a) {
+                is KeyAction.Text -> {
+                    if (a.value.length == 1 && !Character.isISOControl(a.value[0])) {
+                        val character = if (shouldUppercase()) a.value.uppercase(Locale.ROOT)
+                            else a.value
+                        emojiSearchQuery = (emojiSearchQuery + character).take(40)
+                        oneShotShift = false
+                        render()
+                    }
+                    return
+                }
+                is KeyAction.Hardware -> if (a.code == KeyEvent.KEYCODE_DEL) {
+                    if (emojiSearchQuery.isNotEmpty()) {
+                        val end = Character.offsetByCodePoints(
+                            emojiSearchQuery, emojiSearchQuery.length, -1
+                        )
+                        emojiSearchQuery = emojiSearchQuery.substring(0, end)
+                    }
+                    render()
+                    return
+                }
+                else -> Unit
+            }
+        }
         when (a) {
             is KeyAction.Layer -> {
                 finishComposition(false)
                 toolsOpen = false
+                if (a.layer != KeyboardLayer.EMOJI) {
+                    emojiSearchMode = false
+                    emojiSearchQuery = ""
+                }
                 layer = a.layer
                 render()
             }
@@ -811,8 +1124,13 @@ class DeveloperKeyboardService : InputMethodService() {
             }
             KeyAction.Picker -> chooseKeyboard()
             KeyAction.Tools -> {
-                toolsOpen = !toolsOpen
-                if (toolsOpen) finishComposition(false)
+                if (customizingTools) {
+                    customizingTools = false
+                    toolsOpen = true
+                } else {
+                    toolsOpen = !toolsOpen
+                    if (toolsOpen) finishComposition(false)
+                }
                 render()
             }
             KeyAction.Voice -> startVoice()
@@ -826,6 +1144,7 @@ class DeveloperKeyboardService : InputMethodService() {
                     else KeyboardMode.STANDARD
                 KeyboardPreferences.setMode(this, mode)
                 toolsOpen = false
+                customizingTools = false
                 layer = KeyboardLayer.LETTERS
                 oneShotShift = false
                 modifiers.clear()
